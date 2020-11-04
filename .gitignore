@@ -1,0 +1,8 @@
+# Prerequisites
+*.d
+
+# Compiled Object files
+*.o
+
+# Visual Studio Code Setting
+.vscode/
