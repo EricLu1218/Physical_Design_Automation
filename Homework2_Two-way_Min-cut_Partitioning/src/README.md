@@ -11,7 +11,7 @@ In this directory, enter the following command:
 ```
 $ make
 ```
-It will generate the executable file "FM_Partitioner" in "HW2_Two-way_Min-cut_Partitioning/bin/".
+It will generate the executable file "FM_Partitioner" in "Homework2_Two-way_Min-cut_Partitioning/bin/".
 
 If you want to remove it, please enter the following command:
 ```
@@ -29,7 +29,7 @@ e.g.
 $ ../bin/FM_Partitioner ../testcases/p2-1.nets ../testcases/p2-1.cells ../output/p2-1.out
 ```
 
-**In "HW2_Two-way_Min-cut_Partitioning/bin/", enter the following command:**
+**In "Homework2_Two-way_Min-cut_Partitioning/bin/", enter the following command:**
 ```
 Usage: ../<exe> <net file> <cell file> <output file>
 ```
