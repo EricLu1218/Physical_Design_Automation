@@ -88,9 +88,12 @@ int64_t FM_Partitioner::update_gain(Cell *maxGainCell)
     if (maxGainCell->set)
         std::swap(from, to);
 
+    maxGainCell->set = !maxGainCell->set;
     group[from].removeCell(maxGainCell);
     group[to].insertCell(maxGainCell);
     maxGainCell->lock = true;
+
+    group[from].removeNode(maxGainCell);
     for (auto net : maxGainCell->nets)
     {
         if (net->groupCnt[to] == 0)
@@ -140,8 +143,6 @@ int64_t FM_Partitioner::update_gain(Cell *maxGainCell)
             }
         }
     }
-    group[maxGainCell->set].removeNode(maxGainCell);
-    maxGainCell->set = !maxGainCell->set;
     return maxGainCell->gain;
 }
 
