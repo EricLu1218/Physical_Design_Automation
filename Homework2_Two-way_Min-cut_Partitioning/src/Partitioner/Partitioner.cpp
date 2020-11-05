@@ -63,20 +63,10 @@ void FM_Partitioner::calInitGain()
         cell->gain = 0;
         for (auto net : cell->nets)
         {
-            if (cell->set == 0)
-            {
-                if (net->groupCnt[0] == 1)
-                    ++cell->gain;
-                if (net->groupCnt[1] == 0)
-                    --cell->gain;
-            }
-            else
-            {
-                if (net->groupCnt[0] == 0)
-                    --cell->gain;
-                if (net->groupCnt[1] == 1)
-                    ++cell->gain;
-            }
+            if (net->groupCnt[cell->set] == 1)
+                ++cell->gain;
+            if (net->groupCnt[!cell->set] == 0)
+                --cell->gain;
         }
     }
 }
