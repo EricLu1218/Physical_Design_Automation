@@ -23,7 +23,7 @@ void Parser::readNet(std::string filename)
     std::string name, temp;
     while (fin >> temp >> name >> temp)
     {
-        Net *net = new Net(name);
+        auto net = new Net(name);
         nets.emplace_back(net);
         while (fin >> name && name[0] != '}')
         {
