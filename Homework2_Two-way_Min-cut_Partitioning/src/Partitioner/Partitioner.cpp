@@ -82,19 +82,19 @@ void FM_Partitioner::bulidBucketList()
     }
 }
 
-int64_t FM_Partitioner::update_gain(Cell *maxGainCell)
+int64_t FM_Partitioner::update_gain(Cell *baseCell)
 {
     int64_t from = 0, to = 1;
-    if (maxGainCell->set)
+    if (baseCell->set)
         std::swap(from, to);
 
-    maxGainCell->set = !maxGainCell->set;
-    group[from].removeCell(maxGainCell);
-    group[to].insertCell(maxGainCell);
-    maxGainCell->lock = true;
+    baseCell->set = !baseCell->set;
+    group[from].removeCell(baseCell);
+    group[to].insertCell(baseCell);
+    baseCell->lock = true;
 
-    group[from].removeNode(maxGainCell);
-    for (auto net : maxGainCell->nets)
+    group[from].removeNode(baseCell);
+    for (auto net : baseCell->nets)
     {
         if (net->groupCnt[to] == 0)
         {
@@ -143,7 +143,7 @@ int64_t FM_Partitioner::update_gain(Cell *maxGainCell)
             }
         }
     }
-    return maxGainCell->gain;
+    return baseCell->gain;
 }
 
 int64_t FM_Partitioner::fmProcess()
@@ -161,7 +161,7 @@ int64_t FM_Partitioner::fmProcess()
         {
             while (group[0].bucketListCnt > 0)
             {
-                auto a = group[0].getMaxGainCell();
+                auto a = group[0].getBaseCell();
                 if (abs(group[0].size - group[1].size - 2 * a->size) >= input.balanceFactor)
                 {
                     flagA = true;
@@ -181,7 +181,7 @@ int64_t FM_Partitioner::fmProcess()
         {
             while (group[1].bucketListCnt > 0)
             {
-                auto b = group[1].getMaxGainCell();
+                auto b = group[1].getBaseCell();
                 if (abs(group[1].size - group[0].size - 2 * b->size) >= input.balanceFactor)
                 {
                     flagB = true;

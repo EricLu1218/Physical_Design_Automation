@@ -59,5 +59,5 @@ struct Group
     void insertNode(Cell *cell);
     void removeNode(Cell *cell);
     void moveNode(Cell *cell);
-    Cell *getMaxGainCell();
+    Cell *getBaseCell();
 };

@@ -47,7 +47,7 @@ void Group::moveNode(Cell *cell)
     insertNode(cell);
 }
 
-Cell *Group::getMaxGainCell()
+Cell *Group::getBaseCell()
 {
     for (int64_t i = Pmax; i >= -Pmax; --i)
     {
