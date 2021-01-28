@@ -1,6 +1,6 @@
 CXX := g++
 CXXFLAGS := -std=c++11 -O3 -Wall -Wextra
-LIBS := -lm -lrt
+LIBS := -lm
 EXEC := ../bin/FM_Partitioner
 SRC_DIRS := Parser\
 			Partitioner\
