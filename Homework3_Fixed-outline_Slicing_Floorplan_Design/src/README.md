@@ -1,5 +1,5 @@
-# Homework2: Two-way Min-cut Partitioning
-Implement Fiduccia–Mattheyses algorithm to solve the problem of two-way min-cut partitioning.
+# Homework3: Fixed-outline_Slicing_Floorplan_Design
+Use FM algorithm to implement two-way min-cut partitioning.
 
 ## Notice
 This code has been modified to OOP on 2020.11.04.
