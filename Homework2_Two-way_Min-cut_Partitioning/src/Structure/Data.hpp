@@ -16,19 +16,19 @@ struct Net;
 struct Cell
 {
     std::string name;
-    int64_t size, set, gain;
+    int size, set, gain;
     bool lock;
     std::vector<Net *> nets;
     Node *node;
 
-    Cell(std::string name, int64_t size)
+    Cell(std::string name, int size)
         : name(name), size(size), set(2), gain(0), lock(false), node(new Node(this)) {}
 };
 
 struct Net
 {
     std::string name;
-    std::vector<int64_t> groupCnt;
+    std::vector<int> groupCnt;
     std::vector<Cell *> cells;
 
     Net(std::string name) : name(name)
@@ -49,8 +49,8 @@ struct FMInput
 
 struct Group
 {
-    int64_t size, Pmax, bucketListCnt;
-    std::unordered_map<int64_t, Node *> bucketList;
+    int size, Pmax, bucketListCnt;
+    std::unordered_map<int, Node *> bucketList;
 
     Group() : size(0), Pmax(0), bucketListCnt(0) {}
     void insertCell(Cell *cell);

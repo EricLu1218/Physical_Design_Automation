@@ -22,14 +22,14 @@ clean:
 	rm -rf $(EXEC) $(OBJS) $(DEPS)
 
 ifeq (test,$(firstword $(MAKECMDGOALS)))
-  TEST_CASE_ID := $(wordlist 2,$(words $(MAKECMDGOALS)),$(MAKECMDGOALS))
-  $(eval $(TEST_CASE_ID):;@:)
+  TESTCASE_NAME := $(wordlist 2,$(words $(MAKECMDGOALS)),$(MAKECMDGOALS))
+  $(eval $(TESTCASE_NAME):;@:)
 endif
 
 test: $(EXEC)
-	@echo test on p2-$(TEST_CASE_ID)
-	./$(EXEC) ../testcases/p2-$(TEST_CASE_ID).nets ../testcases/p2-$(TEST_CASE_ID).cells ../output/p2-$(TEST_CASE_ID).out
-	../verifier/verify ../testcases/p2-$(TEST_CASE_ID).nets ../testcases/p2-$(TEST_CASE_ID).cells ../output/p2-$(TEST_CASE_ID).out
+	@echo test on $(TESTCASE_NAME)
+	./$(EXEC) ../testcases/$(TESTCASE_NAME).nets ../testcases/$(TESTCASE_NAME).cells ../output/$(TESTCASE_NAME).out
+	../verifier/verify ../testcases/$(TESTCASE_NAME).nets ../testcases/$(TESTCASE_NAME).cells ../output/$(TESTCASE_NAME).out
 
 .PHONY: all clean test
 -include $(DEPS)

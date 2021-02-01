@@ -4,9 +4,9 @@
 
 class FM_Partitioner
 {
-    FMInput input;
+    FMInput *input;
 
-    int64_t bestStep;
+    int bestStep;
     std::vector<Group> group;
 
     void initPartition();
@@ -14,11 +14,10 @@ class FM_Partitioner
     size_t getCutSize();
     void calInitGain();
     void bulidBucketList();
-    int64_t update_gain(Cell *baseCell);
-    int64_t fmProcess();
+    int update_gain(Cell *baseCell);
+    int fmProcess();
 
 public:
     FM_Partitioner(FMInput *input);
-
     ResultWriter *solve();
 };

@@ -14,10 +14,8 @@ void Group::bulidBucketList()
 {
     bucketListCnt = 0;
     bucketList.clear();
-    for (int64_t i = -Pmax; i <= Pmax; ++i)
-    {
+    for (int i = -Pmax; i <= Pmax; ++i)
         bucketList.emplace(i, new Node(nullptr));
-    }
 }
 
 void Group::insertNode(Cell *cell)
@@ -49,10 +47,8 @@ void Group::moveNode(Cell *cell)
 
 Cell *Group::getBaseCell()
 {
-    for (int64_t i = Pmax; i >= -Pmax; --i)
-    {
+    for (int i = Pmax; i >= -Pmax; --i)
         if (bucketList.at(i)->next != nullptr)
             return bucketList.at(i)->next->cell;
-    }
     return nullptr;
 }

@@ -7,8 +7,8 @@
 void FM_Partitioner::initPartition()
 {
     /* choose seed for each testcase (Platform: nthucad ic26) */
-    int64_t seed = 0;
-    size_t cell_cnt = input.cells.size(), net_cnt = input.nets.size();
+    int seed = 0;
+    size_t cell_cnt = input->cells.size(), net_cnt = input->nets.size();
     if (cell_cnt == 375 && net_cnt == 357)
         seed = 4;
     else if (cell_cnt == 6049 && net_cnt == 4944)
@@ -18,12 +18,12 @@ void FM_Partitioner::initPartition()
     else if (cell_cnt == 375 && net_cnt == 357)
         seed = 2185;
 
-    std::shuffle(input.cells.begin(), input.cells.end(), std::default_random_engine(seed));
+    std::shuffle(input->cells.begin(), input->cells.end(), std::default_random_engine(seed));
     size_t sizeSum = 0;
-    for (auto cell : input.cells)
+    for (auto cell : input->cells)
     {
         size_t set = 0;
-        if (sizeSum > input.balanceFactor * 5)
+        if (sizeSum > input->balanceFactor * 5)
             set = 1;
         cell->set = set;
         group[set].insertCell(cell);
@@ -33,7 +33,7 @@ void FM_Partitioner::initPartition()
 
 void FM_Partitioner::calNetGroup()
 {
-    for (auto net : input.nets)
+    for (auto net : input->nets)
     {
         net->groupCnt[0] = net->groupCnt[1] = 0;
         for (auto cell : net->cells)
@@ -47,7 +47,7 @@ size_t FM_Partitioner::getCutSize()
 {
     calNetGroup();
     size_t cutSize = 0;
-    for (auto net : input.nets)
+    for (auto net : input->nets)
     {
         if (net->groupCnt[0] != 0 && net->groupCnt[1] != 0)
             ++cutSize;
@@ -57,7 +57,7 @@ size_t FM_Partitioner::getCutSize()
 
 void FM_Partitioner::calInitGain()
 {
-    for (auto cell : input.cells)
+    for (auto cell : input->cells)
     {
         cell->lock = false;
         cell->gain = 0;
@@ -76,15 +76,15 @@ void FM_Partitioner::bulidBucketList()
     group[0].bulidBucketList();
     group[1].bulidBucketList();
 
-    for (auto cell : input.cells)
+    for (auto cell : input->cells)
     {
         group[cell->set].insertNode(cell);
     }
 }
 
-int64_t FM_Partitioner::update_gain(Cell *baseCell)
+int FM_Partitioner::update_gain(Cell *baseCell)
 {
-    int64_t from = 0, to = 1;
+    int from = 0, to = 1;
     if (baseCell->set)
         std::swap(from, to);
 
@@ -146,14 +146,14 @@ int64_t FM_Partitioner::update_gain(Cell *baseCell)
     return baseCell->gain;
 }
 
-int64_t FM_Partitioner::fmProcess()
+int FM_Partitioner::fmProcess()
 {
     calNetGroup();
     calInitGain();
     bulidBucketList();
 
     bool flagA = false, flagB = false;
-    int64_t partialSum = 0, maxPartialSum = 0;
+    int partialSum = 0, maxPartialSum = 0;
     std::vector<Cell *> cellStack;
     while (group[0].bucketListCnt > 0 && group[1].bucketListCnt > 0)
     {
@@ -162,7 +162,7 @@ int64_t FM_Partitioner::fmProcess()
             while (group[0].bucketListCnt > 0)
             {
                 auto a = group[0].getBaseCell();
-                if (abs(group[0].size - group[1].size - 2 * a->size) >= input.balanceFactor)
+                if (abs(group[0].size - group[1].size - 2 * a->size) >= input->balanceFactor)
                 {
                     flagA = true;
                     break;
@@ -182,7 +182,7 @@ int64_t FM_Partitioner::fmProcess()
             while (group[1].bucketListCnt > 0)
             {
                 auto b = group[1].getBaseCell();
-                if (abs(group[1].size - group[0].size - 2 * b->size) >= input.balanceFactor)
+                if (abs(group[1].size - group[0].size - 2 * b->size) >= input->balanceFactor)
                 {
                     flagB = true;
                     break;
@@ -199,7 +199,7 @@ int64_t FM_Partitioner::fmProcess()
         }
     }
 
-    for (int64_t i = cellStack.size() - 1; i > bestStep; --i)
+    for (int i = cellStack.size() - 1; i > bestStep; --i)
     {
         auto cell = cellStack[i];
         group[cell->set].size -= cell->size;
@@ -210,12 +210,12 @@ int64_t FM_Partitioner::fmProcess()
 }
 
 FM_Partitioner::FM_Partitioner(FMInput *input)
-    : input(*input), bestStep(0)
+    : input(input), bestStep(0)
 {
-    int64_t Pmax = 0;
+    int Pmax = 0;
     for (auto cell : input->cells)
     {
-        if (Pmax < (int64_t)cell->nets.size())
+        if (Pmax < (int)cell->nets.size())
             Pmax = cell->nets.size();
     }
     group.resize(2);
@@ -223,10 +223,9 @@ FM_Partitioner::FM_Partitioner(FMInput *input)
 
     initPartition();
     auto cutSize = getCutSize();
-    std::cout << "total cell count: " << input->cells.size() << std::endl
-              << "total net count:  " << input->nets.size() << std::endl
-              << "initial cut size: " << cutSize << std::endl
-              << std::endl;
+    std::cerr << "total cell count: " << input->cells.size() << '\n'
+              << "total net count:  " << input->nets.size() << '\n'
+              << "initial cut size: " << cutSize << "\n\n";
 }
 
 ResultWriter *FM_Partitioner::solve()
@@ -237,17 +236,15 @@ ResultWriter *FM_Partitioner::solve()
         auto maxPartialSum = fmProcess();
         if (maxPartialSum > 0)
         {
-            std::cout << "pass: " << ++pass << std::endl
-                      << "max partial sum: " << maxPartialSum << std::endl
-                      << std::endl;
+            std::cerr << "pass: " << ++pass << '\n'
+                      << "max partial sum: " << maxPartialSum << "\n\n";
         }
         else
         {
             cutSize = getCutSize();
-            std::cout << "final cut size: " << cutSize << std::endl
-                      << std::endl;
+            std::cerr << "final cut size: " << cutSize << "\n\n";
             break;
         }
     }
-    return new ResultWriter(&input, cutSize);
+    return new ResultWriter(input, cutSize);
 }

@@ -4,11 +4,10 @@
 
 class ResultWriter
 {
-    FMInput &input;
-
+    FMInput *input;
     size_t cutSize;
 
 public:
-    ResultWriter(FMInput *input, size_t cutSize) : input(*input), cutSize(cutSize) {}
-    void write(std::string filename);
+    ResultWriter(FMInput *input, size_t cutSize) : input(input), cutSize(cutSize) {}
+    void write(std::string const &filename);
 };

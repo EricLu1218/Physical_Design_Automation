@@ -31,7 +31,7 @@ $ ../bin/FM_Partitioner ../testcases/p2-1.nets ../testcases/p2-1.cells ../output
 
 **In "Homework2_Two-way_Min-cut_Partitioning/bin/", enter the following command:**
 ```
-Usage: ../<exe> <net file> <cell file> <output file>
+Usage: ./<exe> <net file> <cell file> <output file>
 ```
 
 e.g.
@@ -42,11 +42,11 @@ $ ./FM_Partitioner ../testcases/p2-1.nets ../testcases/p2-1.cells ../output/p2-1
 ## How to Test
 In this directory, enter the following command:
 ```
-$ make test $(id)
+$ make test $(name)
 ```
-It will test on p2-$(id) and run verifier to verify the answer.
+It will test on $(name) and run verifier to verify the answer.
 
 e.g. test on p2-1 and verify the answer
 ```
-$ make test 1
+$ make test p2-1
 ```

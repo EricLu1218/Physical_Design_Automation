@@ -1,13 +1,14 @@
 #include "Parser.hpp"
+#include <fstream>
 #include <unordered_map>
 
 std::unordered_map<std::string, Cell *> strToCell;
 
-void Parser::readCell(std::string filename)
+void Parser::readCell(std::string const &filename)
 {
     std::ifstream fin(filename);
     std::string name;
-    int64_t size;
+    int size;
     while (fin >> name >> size)
     {
         auto cell = new Cell(name, size);
@@ -17,7 +18,7 @@ void Parser::readCell(std::string filename)
     }
 }
 
-void Parser::readNet(std::string filename)
+void Parser::readNet(std::string const &filename)
 {
     std::ifstream fin(filename);
     std::string name, temp;

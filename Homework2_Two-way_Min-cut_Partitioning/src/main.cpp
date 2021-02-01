@@ -8,11 +8,11 @@ int main(int argc, char *argv[])
 {
     if (argc < 4)
     {
-        std::cerr << "Usage: " << argv[0] << " <net file> <cell file> <output file>" << std::endl;
+        std::cerr << "Usage: " << argv[0] << " <net file> <cell file> <output file>\n";
         return 0;
     }
 
-    GlobalTimer globalTimer;
+    GlobalTimer globalTimer(10 * 60 - 5);
     globalTimer.startTimer("runtime");
     globalTimer.startTimer("parse input");
 
@@ -37,6 +37,5 @@ int main(int argc, char *argv[])
     globalTimer.printTime("FM process");
     globalTimer.printTime("write output");
     globalTimer.printTime("runtime");
-
     return 0;
 }
