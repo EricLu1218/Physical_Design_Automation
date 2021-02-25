@@ -34,5 +34,5 @@ test: $(EXEC)
 	./$(EXEC) ../testcase/$(TESTCASE_NAME).hardblocks ../testcase/$(TESTCASE_NAME).nets ../testcase/$(TESTCASE_NAME).pl ../output/$(TESTCASE_NAME).floorplan 0.15
 	../verifier/verifier ../testcase/$(TESTCASE_NAME).hardblocks ../testcase/$(TESTCASE_NAME).nets ../testcase/$(TESTCASE_NAME).pl ../output/$(TESTCASE_NAME).floorplan 0.15
 
-.PHONY: all clean
+.PHONY: all clean test
 -include $(DEPS)
