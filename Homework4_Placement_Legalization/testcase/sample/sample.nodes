@@ -1,0 +1,11 @@
+UCLA nodes 1.0
+# Created :   11/27/2019 
+# User    :   vlsipda
+
+NumNodes :   4
+NumTerminals :   1
+
+    o0 1 12
+    o1 2 12
+    o2 3 12
+    b0 4 24  terminal

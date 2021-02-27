@@ -1,0 +1,24 @@
+UCLA scl 1.0
+# Created	:	11/27/2019
+# User   	:	vlsipda
+
+NumRows : 2
+
+CoreRow Horizontal
+  Coordinate    :   10
+  Height        :   12
+  Sitewidth     :    1
+  Sitespacing   :    1
+  Siteorient    :    1
+  Sitesymmetry  :    1
+  SubrowOrigin  :    10	NumSites  :  10
+End
+CoreRow Horizontal
+  Coordinate    :   22
+  Height        :   12
+  Sitewidth     :    1
+  Sitespacing   :    1
+  Siteorient    :    1
+  Sitesymmetry  :    1
+  SubrowOrigin  :    10	NumSites  :  10
+End
