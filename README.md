@@ -11,3 +11,6 @@ Implement Fiduccia–Mattheyses algorithm to solve the problem of two-way min-cu
 
 ## Homework3: Fixed-outline Slicing Floorplan Design
 Implement Stockmeyer algorithm to solve the fixed-outline floorplan design with a set of hard blocks.
+
+## Homework4: Placement Legalization
+Implement an existing algorithm, called “Abacus”, to legalize a given global placement result with minimal displacement.
