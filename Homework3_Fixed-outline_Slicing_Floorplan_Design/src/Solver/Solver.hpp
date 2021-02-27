@@ -21,7 +21,7 @@ class SA_Solver
     int calWirelength() const;
     int calCost(std::vector<int> const &npe, bool const &focusWirelength);
     std::vector<int> saProcess(double const &c, double const &r, int const &k,
-                                        std::vector<int> const &NPE, bool const &focusWirelength);
+                               std::vector<int> const &NPE, bool const &focusWirelength);
 
 public:
     SA_Solver(SAInput *input, GlobalTimer &globalTimer);

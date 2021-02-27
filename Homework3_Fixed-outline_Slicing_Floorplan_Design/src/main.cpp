@@ -7,7 +7,7 @@ int main(int argc, char *argv[])
 {
     if (argc < 5)
     {
-        std::cerr << " Usage: " << argv[0] << " <hardblock file> <net file> <pl file> <floorplan file> <deadspace ratio>\n";
+        std::cerr << "Usage: " << argv[0] << " <hardblock file> <net file> <pl file> <floorplan file> <deadspace ratio>\n";
         return 0;
     }
 

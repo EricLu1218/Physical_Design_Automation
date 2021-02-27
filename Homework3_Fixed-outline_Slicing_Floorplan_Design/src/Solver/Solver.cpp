@@ -215,12 +215,12 @@ int SA_Solver::calCost(std::vector<int> const &npe, bool const &focusWirelength)
 }
 
 std::vector<int> SA_Solver::saProcess(double const &c, double const &r, int const &k,
-                                              std::vector<int> const &NPE, bool const &focusWirelength)
+                                      std::vector<int> const &NPE, bool const &focusWirelength)
 {
     int MT = 0, uphill = 0, reject = 0, N = k * input->hardblocks.size();
     std::vector<int> BE, E;
     BE = E = NPE;
-    int bestCost, cost;
+    int bestCost = 0, cost = 0;
     bestCost = cost = calCost(E, focusWirelength);
     if (bestCost == 0)
         goto finishSA;
@@ -243,10 +243,10 @@ std::vector<int> SA_Solver::saProcess(double const &c, double const &r, int cons
 
                 MT += 1;
                 int newCost = calCost(NE, focusWirelength);
-                int delta_cost = newCost - cost;
-                if (delta_cost < 0 || (double)rand() / RAND_MAX < exp(-1 * delta_cost / T0))
+                int deltaCost = newCost - cost;
+                if (deltaCost < 0 || (double)rand() / RAND_MAX < exp(-1 * deltaCost / T0))
                 {
-                    if (delta_cost > 0)
+                    if (deltaCost > 0)
                         uphill += 1;
 
                     E = NE;

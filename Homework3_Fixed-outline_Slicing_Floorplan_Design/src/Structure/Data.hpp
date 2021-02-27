@@ -20,7 +20,6 @@ struct Hardblock
 
     Hardblock(std::string const &name, int const &width, int const &height)
         : name(name), width(width), height(height), x(0), y(0), isRotated(false), pin(new Pin(name, x, y)) {}
-
     void update(int const &_width, int const &_height, int const &_x, int const &_y);
 };
 
