@@ -9,7 +9,7 @@ class SA_Solver
     SAInput *input;
     GlobalTimer &globalTimer;
     std::vector<Node *> hardblockNodes, cutNodes;
-    double outline;
+    int outline;
 
     void getInitialNPE(std::vector<int> &npe);
     void invertCut(std::vector<int> &npe, size_t pos);
