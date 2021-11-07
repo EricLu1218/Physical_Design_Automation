@@ -82,7 +82,7 @@ void FM_Partitioner::bulidBucketList()
     }
 }
 
-int FM_Partitioner::update_gain(Cell *baseCell)
+int FM_Partitioner::updateGain(Cell *baseCell)
 {
     int from = 0, to = 1;
     if (baseCell->set)
@@ -168,7 +168,7 @@ int FM_Partitioner::fmProcess()
                     break;
                 }
                 flagB = false;
-                partialSum += update_gain(a);
+                partialSum += updateGain(a);
                 cellStack.push_back(a);
                 if (maxPartialSum < partialSum)
                 {
@@ -188,7 +188,7 @@ int FM_Partitioner::fmProcess()
                     break;
                 }
                 flagA = false;
-                partialSum += update_gain(b);
+                partialSum += updateGain(b);
                 cellStack.push_back(b);
                 if (maxPartialSum < partialSum)
                 {

@@ -14,7 +14,7 @@ class FM_Partitioner
     size_t getCutSize();
     void calInitGain();
     void bulidBucketList();
-    int update_gain(Cell *baseCell);
+    int updateGain(Cell *baseCell);
     int fmProcess();
 
 public:
