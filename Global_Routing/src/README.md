@@ -1,17 +1,12 @@
-# Homework5: Global Routing
+# Global Routing
 Implement an existing algorithm to solve the global routing problem with a set of 2-pin nets while minimizing the total wirelength.
-
-## Notice
-This code has been modified to OOP on 2021.03.03.
-
-This is not the same as report.
 
 ## How to Compile
 In this directory, enter the following command:
 ```
 $ make
 ```
-It will generate the executable file "hw5" in "Homework5_Global_Routing/bin/".
+It will generate the executable file "hw5" in "Global_Routing/bin/".
 
 If you want to remove it, please enter the following command:
 ```
@@ -29,7 +24,7 @@ e.g.
 $ ../bin/hw5 ../testcase/ibm01.modified.txt ../output/ibm01.result
 ```
 
-**In "Homework5_Global_Routing/bin/", enter the following command:**
+**In "Global_Routing/bin/", enter the following command:**
 ```
 Usage: ./<exe> <modified.txt file> <result file>
 ```
