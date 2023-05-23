@@ -1,2 +1,23 @@
 # Auto detect text files and perform LF normalization
 * text=auto
+
+# For partition
+*.cells      text eol=lf
+*.nets       text eol=lf
+*.out        text eol=lf
+
+# For floorplan
+*.hardblocks text eol=lf
+*.nets       text eol=lf
+*.pl         text eol=lf
+*.floorplan  text eol=lf
+
+# For legalization
+*.aux        text eol=lf
+*.nodes      text eol=lf
+*.pl         text eol=lf
+*.scl        text eol=lf
+*.result     text eol=lf
+
+# For routing
+*.txt        text eol=lf
