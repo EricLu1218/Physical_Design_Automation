@@ -29,8 +29,8 @@ endif
 
 test: $(EXEC)
 	@echo test on $(TESTCASE_NAME)
-	./$(EXEC) ../testcases/$(TESTCASE_NAME).nets ../testcases/$(TESTCASE_NAME).cells ../output/$(TESTCASE_NAME).out
-	../verifier/verify ../testcases/$(TESTCASE_NAME).nets ../testcases/$(TESTCASE_NAME).cells ../output/$(TESTCASE_NAME).out
+	./$(EXEC) ../testcase/$(TESTCASE_NAME).nets ../testcase/$(TESTCASE_NAME).cells ../output/$(TESTCASE_NAME).out
+	../verifier/verify ../testcase/$(TESTCASE_NAME).nets ../testcase/$(TESTCASE_NAME).cells ../output/$(TESTCASE_NAME).out
 
 .PHONY: all clean test
 -include $(DEPS)

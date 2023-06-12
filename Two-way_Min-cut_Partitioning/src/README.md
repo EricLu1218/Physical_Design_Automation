@@ -21,7 +21,7 @@ $ ./FM_Partitioner <net file> <cell file> <output file>
 
 E.g.,
 ```
-$ ./FM_Partitioner ../testcases/p2-1.nets ../testcases/p2-1.cells ../output/p2-1.out
+$ ./FM_Partitioner ../testcase/p2-1.nets ../testcase/p2-1.cells ../output/p2-1.out
 ```
 
 ## How to Test
