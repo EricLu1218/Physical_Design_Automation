@@ -1,3 +1,4 @@
+#pragma once
 #include <iostream>
 #include <string>
 #include <unistd.h>
@@ -31,7 +32,6 @@ public:
         netFile = argv[optind];
         cellFile = argv[optind + 1];
         outputFile = argv[optind + 2];
-
         return true;
     }
 };
