@@ -5,14 +5,10 @@
 
 class Parser
 {
-    int totalSize;
-    std::vector<Cell *> cells;
-    std::vector<Net *> nets;
-
-    void readCell(std::string const &filename);
-    void readNet(std::string const &filename);
+    void readCell(Input *input, const std::string &filename);
+    void readNet(Input *input, const std::string &filename);
 
 public:
-    Parser() : totalSize(0) {}
-    FMInput *parse(char *argv[]);
+    Parser();
+    Input::ptr parse(const std::string &cellFile, const std::string &netFile);
 };

@@ -1,42 +1,53 @@
 #include "Data.hpp"
 
-void Group::insertCell(Cell *cell)
+Node::Node() : prev(nullptr), next(nullptr) {}
+
+Cell::Cell() : size(0), groupIdx(-1), gain(0), lock(false) {}
+
+Cell::Cell(const std::string &name, int size)
+    : name(name), size(size), groupIdx(-1), gain(0), lock(false) {}
+
+Net::Net() {}
+
+Net::Net(const std::string &name) : name(name), numCellInGroup(2, 0) {}
+
+void Net::updateNumCellInGroup()
 {
-    size += cell->size;
+    numCellInGroup[0] = numCellInGroup[1] = 0;
+    for (const auto cell : cells)
+        ++numCellInGroup[cell->groupIdx];
 }
 
-void Group::removeCell(Cell *cell)
-{
-    size -= cell->size;
-}
+Input::Input() : maxDiffSize(0) {}
 
-void Group::bulidBucketList()
+Group::Group() : size(0), pMax(0), numCellInBucketList(0) {}
+
+void Group::initBucketList()
 {
-    bucketListCnt = 0;
+    numCellInBucketList = 0;
     bucketList.clear();
-    for (int i = -Pmax; i <= Pmax; ++i)
-        bucketList.emplace(i, new Node(nullptr));
+    for (int i = -pMax; i <= pMax; ++i)
+        bucketList[i];
 }
 
 void Group::insertNode(Cell *cell)
 {
-    auto head = bucketList.at(cell->gain);
-    auto node = cell->node;
-    node->next = head->next;
-    node->before = head;
-    if (node->next != nullptr)
-        node->next->before = node;
-    head->next = node;
-    ++bucketListCnt;
+    ++numCellInBucketList;
+    auto head = &bucketList[cell->gain];
+    cell->prev = head;
+    cell->next = head->next;
+    if (head->next)
+        head->next->prev = cell;
+    head->next = cell;
 }
 
 void Group::removeNode(Cell *cell)
 {
-    auto node = cell->node;
-    if (node->next != nullptr)
-        node->next->before = node->before;
-    node->before->next = node->next;
-    --bucketListCnt;
+    --numCellInBucketList;
+    if (cell->next)
+        cell->next->prev = cell->prev;
+    cell->prev->next = cell->next;
+    cell->prev = cell->next = nullptr;
 }
 
 void Group::moveNode(Cell *cell)
@@ -45,10 +56,10 @@ void Group::moveNode(Cell *cell)
     insertNode(cell);
 }
 
-Cell *Group::getBaseCell()
+Cell *Group::getBaseCell() const
 {
-    for (int i = Pmax; i >= -Pmax; --i)
-        if (bucketList.at(i)->next != nullptr)
-            return bucketList.at(i)->next->cell;
+    for (int i = pMax; i >= -pMax; --i)
+        if (bucketList.at(i).next)
+            return static_cast<Cell *>(bucketList.at(i).next);
     return nullptr;
 }

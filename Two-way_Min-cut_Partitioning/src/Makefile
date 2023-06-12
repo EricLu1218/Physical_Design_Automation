@@ -1,14 +1,15 @@
-CXX := g++
-CXXFLAGS := -std=c++11 -O3 -Wall -Wextra
-LIBS := -lm
-EXEC := ../bin/FM_Partitioner
-SRC_DIRS := Parser\
+CXX      := g++
+CXXFLAGS := -std=c++17 -O3 -Wall -Wextra -MMD
+LIBS     := -lm
+EXEC     := ../bin/FM_Partitioner
+SRC_DIRS := .\
+			Parser\
 			Partitioner\
 			ResultWriter\
 			Structure
-SRCS := main.cpp $(wildcard $(SRC_DIRS:=/*.cpp))
-OBJS := $(SRCS:.cpp=.o)
-DEPS := $(OBJS:.o=.d)
+SRCS     := $(wildcard $(SRC_DIRS:=/*.cpp))
+OBJS     := $(SRCS:.cpp=.o)
+DEPS     := $(OBJS:.o=.d)
 
 all: $(EXEC)
 
@@ -16,7 +17,7 @@ $(EXEC): $(OBJS)
 	$(CXX) $(LIBS) -o $@ $^
 
 %.o: %.cpp
-	$(CXX) $(CXXFLAGS) -MMD -c $< -o $@
+	$(CXX) $(CXXFLAGS) -c $< -o $@
 
 clean:
 	rm -rf $(EXEC) $(OBJS) $(DEPS)

@@ -1,43 +1,62 @@
 #include "Parser.hpp"
 #include <fstream>
+#include <iostream>
 #include <unordered_map>
 
 std::unordered_map<std::string, Cell *> strToCell;
 
-void Parser::readCell(std::string const &filename)
+void Parser::readCell(Input *input, const std::string &filename)
 {
     std::ifstream fin(filename);
+    if (!fin)
+    {
+        std::cerr << "[Error] Cannot open \"" << filename << "\".\n";
+        exit(EXIT_FAILURE);
+    }
+
     std::string name;
-    int size;
+    int size = 0;
     while (fin >> name >> size)
     {
         auto cell = new Cell(name, size);
-        cells.emplace_back(cell);
+        input->cells.emplace_back(cell);
         strToCell.emplace(name, cell);
-        totalSize += size;
-    }
+    };
 }
 
-void Parser::readNet(std::string const &filename)
+void Parser::readNet(Input *input, const std::string &filename)
 {
     std::ifstream fin(filename);
-    std::string name, temp;
-    while (fin >> temp >> name >> temp)
+    if (!fin)
+    {
+        std::cerr << "[Error] Cannot open \"" << filename << "\".\n";
+        exit(EXIT_FAILURE);
+    }
+
+    std::string name, _;
+    while (fin >> _ >> name >> _)
     {
         auto net = new Net(name);
-        nets.emplace_back(net);
+        input->nets.emplace_back(net);
         while (fin >> name && name[0] != '}')
         {
-            auto cell = strToCell.at(name);
-            net->cells.push_back(cell);
-            cell->nets.push_back(net);
+            auto cell = strToCell[name];
+            net->cells.emplace_back(cell);
+            cell->nets.emplace_back(net);
         }
     }
 }
 
-FMInput *Parser::parse(char *argv[])
+Parser::Parser() {}
+
+Input::ptr Parser::parse(const std::string &cellFile, const std::string &netFile)
 {
-    readCell(argv[2]);
-    readNet(argv[1]);
-    return new FMInput(totalSize / 10.0, cells, nets);
+    auto input = new Input();
+    readCell(input, cellFile);
+    readNet(input, netFile);
+    int totalSize = 0;
+    for (const auto &cell : input->cells)
+        totalSize += cell->size;
+    input->maxDiffSize = static_cast<double>(totalSize) / 10;
+    return std::unique_ptr<Input>(input);
 }

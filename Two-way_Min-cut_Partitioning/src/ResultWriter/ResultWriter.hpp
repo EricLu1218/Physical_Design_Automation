@@ -1,13 +1,19 @@
 #pragma once
 #include "../Structure/Data.hpp"
+#include <memory>
 #include <string>
+#include <vector>
 
 class ResultWriter
 {
-    FMInput *input;
-    size_t cutSize;
+    int cutSize;
+    std::vector<std::vector<std::string>> groups;
 
 public:
-    ResultWriter(FMInput *input, size_t cutSize) : input(input), cutSize(cutSize) {}
-    void write(std::string const &filename);
+    using ptr = std::unique_ptr<ResultWriter>;
+
+    ResultWriter();
+    void setCutsize(int cutsize_);
+    void addCell(Cell *cell);
+    void write(const std::string &filename) const;
 };

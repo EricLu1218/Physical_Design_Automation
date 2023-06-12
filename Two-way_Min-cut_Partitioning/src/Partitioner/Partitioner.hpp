@@ -2,22 +2,20 @@
 #include "../ResultWriter/ResultWriter.hpp"
 #include "../Structure/Data.hpp"
 
-class FM_Partitioner
+class Partitioner
 {
-    FMInput *input;
+    Input *input;
 
-    int bestStep;
-    std::vector<Group> group;
+    std::vector<Group> groups;
 
-    void initPartition();
-    void calNetGroup();
-    size_t getCutSize();
-    void calInitGain();
+    void generateInitialPartition();
+    int getCutSize() const;
+    void updateAllCellGain();
     void bulidBucketList();
-    int updateGain(Cell *baseCell);
+    void updateGain(Cell *baseCell);
     int fmProcess();
 
 public:
-    FM_Partitioner(FMInput *input);
-    ResultWriter *solve();
+    Partitioner(Input *input);
+    ResultWriter::ptr solve();
 };

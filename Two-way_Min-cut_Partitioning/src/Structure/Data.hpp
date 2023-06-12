@@ -1,63 +1,66 @@
 #pragma once
+#include <memory>
 #include <string>
 #include <unordered_map>
 #include <vector>
 
-struct Cell;
 struct Node
 {
-    Cell *cell;
-    Node *next, *before;
+    Node *prev, *next;
 
-    Node(Cell *cell) : cell(cell), next(nullptr), before(nullptr) {}
+    Node();
 };
 
 struct Net;
-struct Cell
+struct Cell : Node
 {
-    std::string name;
-    int size, set, gain;
-    bool lock;
-    std::vector<Net *> nets;
-    Node *node;
+    using ptr = std::unique_ptr<Cell>;
 
-    Cell(std::string name, int size)
-        : name(name), size(size), set(2), gain(0), lock(false), node(new Node(this)) {}
+    std::string name;
+    int size;
+    std::vector<Net *> nets;
+
+    int groupIdx, gain;
+    bool lock;
+
+    Cell();
+    Cell(const std::string &name, int size);
 };
 
 struct Net
 {
+    using ptr = std::unique_ptr<Net>;
+
     std::string name;
-    std::vector<int> groupCnt;
     std::vector<Cell *> cells;
 
-    Net(std::string name) : name(name)
-    {
-        groupCnt.resize(2, 0);
-    }
+    std::vector<int> numCellInGroup;
+
+    Net();
+    Net(const std::string &name);
+    void updateNumCellInGroup();
 };
 
-struct FMInput
+struct Input
 {
-    double balanceFactor;
-    std::vector<Cell *> cells;
-    std::vector<Net *> nets;
+    using ptr = std::unique_ptr<Input>;
 
-    FMInput(double balanceFactor, std::vector<Cell *> cells, std::vector<Net *> nets)
-        : balanceFactor(balanceFactor), cells(cells), nets(nets) {}
+    double maxDiffSize;
+    std::vector<Cell::ptr> cells;
+    std::vector<Net::ptr> nets;
+
+    Input();
 };
 
 struct Group
 {
-    int size, Pmax, bucketListCnt;
-    std::unordered_map<int, Node *> bucketList;
+    int size, pMax, numCellInBucketList;
+    std::unordered_map<int, Node> bucketList;
 
-    Group() : size(0), Pmax(0), bucketListCnt(0) {}
-    void insertCell(Cell *cell);
-    void removeCell(Cell *cell);
-    void bulidBucketList();
+    Group();
+    void initBucketList();
     void insertNode(Cell *cell);
     void removeNode(Cell *cell);
     void moveNode(Cell *cell);
-    Cell *getBaseCell();
+    Cell *getBaseCell() const;
 };

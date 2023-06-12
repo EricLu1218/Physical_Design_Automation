@@ -1,41 +1,38 @@
-#include "GlobalTimer/GlobalTimer.hpp"
+#include "Parser/ArgumentParser.hpp"
 #include "Parser/Parser.hpp"
 #include "Partitioner/Partitioner.hpp"
-#include "ResultWriter/ResultWriter.hpp"
-#include <iostream>
+#include "Timer/Timer.hpp"
 
 int main(int argc, char *argv[])
 {
-    if (argc < 4)
-    {
-        std::cerr << "Usage: " << argv[0] << " <net file> <cell file> <output file>\n";
-        return 0;
-    }
+    ArgumentParser argParser;
+    if (!argParser.parse(argc, argv))
+        return 1;
 
-    GlobalTimer globalTimer(10 * 60 - 5);
-    globalTimer.startTimer("runtime");
-    globalTimer.startTimer("parse input");
+    Timer timer(10 * 60 - 5);
+    timer.startTimer("runtime");
+    timer.startTimer("parse input");
 
     Parser parser;
-    auto input = parser.parse(argv);
+    auto input = parser.parse(argParser.cellFile, argParser.netFile);
 
-    globalTimer.stopTimer("parse input");
-    globalTimer.startTimer("FM process");
+    timer.stopTimer("parse input");
+    timer.startTimer("FM process");
 
-    FM_Partitioner partitioner(input);
+    Partitioner partitioner(input.get());
     auto result = partitioner.solve();
 
-    globalTimer.stopTimer("FM process");
-    globalTimer.startTimer("write output");
+    timer.stopTimer("FM process");
+    timer.startTimer("write output");
 
-    result->write(argv[3]);
+    result->write(argParser.outputFile);
 
-    globalTimer.stopTimer("write output");
-    globalTimer.stopTimer("runtime");
+    timer.stopTimer("write output");
+    timer.stopTimer("runtime");
 
-    globalTimer.printTime("parse input");
-    globalTimer.printTime("FM process");
-    globalTimer.printTime("write output");
-    globalTimer.printTime("runtime");
+    timer.printTime("parse input");
+    timer.printTime("FM process");
+    timer.printTime("write output");
+    timer.printTime("runtime");
     return 0;
 }
