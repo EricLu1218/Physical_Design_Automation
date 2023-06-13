@@ -2,20 +2,32 @@
 #include <algorithm>
 #include <limits>
 
-void Hardblock::update(int const &_width, int const &_height, int const &_x, int const &_y)
+Pin::Pin() : x(0), y(0) {}
+
+Pin::Pin(const std::string &name, int x, int y) : name(name), x(x), y(y) {}
+
+Hardblock::Hardblock()
+    : width(0), height(0), x(0), y(0), isRotated(false), pin(new Pin(name, x, y)) {}
+
+Hardblock::Hardblock(const std::string &name, int width, int height)
+    : name(name), width(width), height(height), x(0), y(0), isRotated(false), pin(new Pin(name, x, y)) {}
+
+void Hardblock::update(int width_, int height_, int x_, int const y_)
 {
-    x = _x;
-    y = _y;
-    isRotated = !(width == _width && height == _height);
-    pin->x = _x + _width / 2;
-    pin->y = _y + _height / 2;
+    x = x_;
+    y = y_;
+    isRotated = !(width == width_ || height == height_);
+    pin->x = x_ + width_ / 2;
+    pin->y = y_ + height_ / 2;
 }
 
-int Net::HPWL()
+Net::Net() {}
+
+int Net::wirelength() const
 {
-    int minX = std::numeric_limits<int>::max(), minY = std::numeric_limits<int>::max(),
-        maxX = std::numeric_limits<int>::min(), maxY = std::numeric_limits<int>::min();
-    for (auto pin : pins)
+    int minX = std::numeric_limits<int>::max(), minY = std::numeric_limits<int>::max();
+    int maxX = std::numeric_limits<int>::min(), maxY = std::numeric_limits<int>::min();
+    for (const auto pin : pins)
     {
         if (minX > pin->x)
             minX = pin->x;
@@ -29,59 +41,67 @@ int Net::HPWL()
     return (maxX - minX) + (maxY - minY);
 }
 
-bool heightCmp(std::vector<int> const &a, std::vector<int> const &b)
+Input::Input() : deadspaceRatio(0) {}
+
+Node::Record::Record() : width(0), height(0), leftChoice(0), rightChoice(0) {}
+
+Node::Record::Record(int width, int height, int leftChoice, int rightChoice)
+    : width(width), height(height), leftChoice(leftChoice), rightChoice(rightChoice) {}
+
+Node::Node() : type(HARDBLOCK), hardblock(nullptr), lchild(nullptr), rchild(nullptr) {}
+
+Node::Node(int type, Hardblock *hardblock) : type(type), hardblock(hardblock), lchild(nullptr), rchild(nullptr)
 {
-    return a[1] > b[1];
+    if (hardblock)
+    {
+        records.emplace_back(hardblock->width, hardblock->height, 0, 0);
+        records.emplace_back(hardblock->height, hardblock->width, 1, 1);
+    }
 }
 
 void Node::updateRecord()
 {
-    record.clear();
-    if (type == VERTICAL_CUT)
+    records.clear();
+    if (type == HORIZONTAL_CUT)
     {
-        sort(lchild->record.begin(), lchild->record.end(), heightCmp);
-        sort(rchild->record.begin(), rchild->record.end(), heightCmp);
-
-        int l = 0, r = 0;
-        while (l < static_cast<int>(lchild->record.size()) &&
-               r < static_cast<int>(rchild->record.size()))
+        auto cmp = [](const Record &a, const Record &b)
         {
-            std::vector<int> row = {lchild->record[l][0] + rchild->record[r][0],
-                                    std::max(lchild->record[l][1], rchild->record[r][1]),
-                                    l, r};
-            record.emplace_back(row);
-            if (lchild->record[l][1] > rchild->record[r][1])
-                l += 1;
-            else if (lchild->record[l][1] < rchild->record[r][1])
-                r += 1;
-            else
-            {
-                l += 1;
-                r += 1;
-            }
-        }
-    }
-    else
-    {
-        std::sort(lchild->record.begin(), lchild->record.end());
-        std::sort(rchild->record.begin(), rchild->record.end());
+            return a.width <= b.width;
+        };
+        std::sort(lchild->records.begin(), lchild->records.end(), cmp);
+        std::sort(rchild->records.begin(), rchild->records.end(), cmp);
 
-        int l = lchild->record.size() - 1, r = rchild->record.size() - 1;
+        int l = lchild->records.size() - 1, r = rchild->records.size() - 1;
         while (l >= 0 && r >= 0)
         {
-            std::vector<int> row = {std::max(lchild->record[l][0], rchild->record[r][0]),
-                                    lchild->record[l][1] + rchild->record[r][1],
-                                    l, r};
-            record.emplace_back(row);
-            if (lchild->record[l][0] > rchild->record[r][0])
-                l -= 1;
-            else if (lchild->record[l][0] < rchild->record[r][0])
-                r -= 1;
-            else
-            {
-                l -= 1;
-                r -= 1;
-            }
+            const auto &left = lchild->records[l];
+            const auto &right = rchild->records[r];
+            records.emplace_back(std::max(left.width, right.width), left.height + right.height, l, r);
+            if (left.width >= right.width)
+                --l;
+            if (left.width <= right.width)
+                --r;
+        }
+    }
+    else if (type == VERTICAL_CUT)
+    {
+        auto cmp = [](const Record &a, const Record &b)
+        {
+            return a.height >= b.height;
+        };
+        std::sort(lchild->records.begin(), lchild->records.end(), cmp);
+        std::sort(rchild->records.begin(), rchild->records.end(), cmp);
+
+        size_t l = 0, r = 0;
+        while (l < lchild->records.size() && r < rchild->records.size())
+        {
+            const auto &left = lchild->records[l];
+            const auto &right = rchild->records[r];
+            records.emplace_back(left.width + right.width, std::max(left.height, right.height), l, r);
+            if (left.height >= right.height)
+                ++l;
+            if (left.height <= right.height)
+                ++r;
         }
     }
 }

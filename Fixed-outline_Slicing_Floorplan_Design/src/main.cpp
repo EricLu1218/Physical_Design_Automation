@@ -1,40 +1,39 @@
-#include "GlobalTimer/GlobalTimer.hpp"
+#include "Parser/ArgumentParser.hpp"
 #include "Parser/Parser.hpp"
 #include "Solver/Solver.hpp"
-#include <iostream>
+#include "Timer/Timer.hpp"
 
 int main(int argc, char *argv[])
 {
-    if (argc < 5)
-    {
-        std::cerr << "Usage: " << argv[0] << " <hardblock file> <net file> <pl file> <floorplan file> <deadspace ratio>\n";
-        return 0;
-    }
+    ArgumentParser argParser;
+    if (!argParser.parse(argc, argv))
+        return 1;
 
-    GlobalTimer globalTimer(20 * 60 - 5);
-    globalTimer.startTimer("runtime");
-    globalTimer.startTimer("parse input");
+    Timer timer(20 * 60 - 5);
+    timer.startTimer("runtime");
+    timer.startTimer("parse input");
 
     Parser parser;
-    auto input = parser.parse(argv);
+    auto input = parser.parse(argParser.hardblockFile, argParser.plFile,
+                              argParser.netFile, argParser.deadspaceRatio);
 
-    globalTimer.stopTimer("parse input");
-    globalTimer.startTimer("SA process");
+    timer.stopTimer("parse input");
+    timer.startTimer("SA process");
 
-    SA_Solver solver(input, globalTimer);
+    Solver solver(input.get(), timer);
     auto result = solver.solve();
 
-    globalTimer.stopTimer("SA process");
-    globalTimer.startTimer("write output");
+    timer.stopTimer("SA process");
+    timer.startTimer("write output");
 
-    result->write(argv[4]);
+    result->write(argParser.floorplanFile);
 
-    globalTimer.stopTimer("write output");
-    globalTimer.stopTimer("runtime");
+    timer.stopTimer("write output");
+    timer.stopTimer("runtime");
 
-    globalTimer.printTime("parse input");
-    globalTimer.printTime("SA process");
-    globalTimer.printTime("write output");
-    globalTimer.printTime("runtime");
+    timer.printTime("parse input");
+    timer.printTime("SA process");
+    timer.printTime("write output");
+    timer.printTime("runtime");
     return 0;
 }

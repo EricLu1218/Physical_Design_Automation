@@ -5,14 +5,12 @@
 
 class Parser
 {
-    std::vector<Hardblock *> hardblocks;
-    std::vector<Net *> nets;
-
-    void readHardblock(std::string const &filename);
-    void readPl(std::string const &filename);
-    void readNet(std::string const &filename);
+    void readHardblock(Input *input, const std::string &filename);
+    void readPl(Input *input, const std::string &filename);
+    void readNet(Input *input, const std::string &filename);
 
 public:
-    Parser() {}
-    SAInput *parse(char *argv[]);
+    Parser();
+    Input::ptr parse(const std::string &hardblockFile, const std::string &plFile,
+                     const std::string &netFile, double deadspaceRatio);
 };

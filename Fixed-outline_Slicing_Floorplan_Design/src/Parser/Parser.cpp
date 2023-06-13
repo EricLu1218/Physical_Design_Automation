@@ -1,79 +1,112 @@
 #include "Parser.hpp"
 #include <algorithm>
 #include <fstream>
+#include <iostream>
 #include <sstream>
 #include <unordered_map>
 
+inline std::string strip(std::string input, std::string chars = " \t\r\n")
+{
+    input.erase(0, input.find_first_not_of(chars));
+    input.erase(input.find_last_not_of(chars) + 1);
+    return input;
+}
+
 std::unordered_map<std::string, Pin *> strToPin;
 
-void Parser::readHardblock(std::string const &filename)
+void Parser::readHardblock(Input *input, const std::string &filename)
 {
     std::ifstream fin(filename);
+    if (!fin)
+    {
+        std::cerr << "[Error] Cannot open \"" << filename << "\".\n";
+        exit(EXIT_FAILURE);
+    }
+
     std::string buff;
     while (std::getline(fin, buff))
     {
+        buff = strip(buff);
         if (buff.empty())
             continue;
 
         std::stringstream buffStream(buff);
-        std::string name;
-        buffStream >> name;
-        if (name == "NumHardRectilinearBlocks" ||
-            name == "NumTerminals")
-            continue;
-
-        std::string identifier;
-        buffStream >> identifier;
+        std::string name, identifier;
+        buffStream >> name >> identifier;
         if (identifier == "hardrectilinear")
         {
             std::string hardblockInfo;
             std::getline(buffStream, hardblockInfo);
-            int x[4], y[4];
+            int x[4] = {0}, y[4] = {0};
             std::sscanf(hardblockInfo.c_str(), " 4 (%d, %d) (%d, %d) (%d, %d) (%d, %d)",
                         x, y, x + 1, y + 1, x + 2, y + 2, x + 3, y + 3);
             auto width = *std::max_element(x, x + 4) - *std::min_element(x, x + 4);
             auto height = *std::max_element(y, y + 4) - *std::min_element(y, y + 4);
-            hardblocks.emplace_back(new Hardblock(name, width, height));
-            strToPin.emplace(name, hardblocks.back()->pin);
+
+            auto hardblock = new Hardblock(name, width, height);
+            input->hardblocks.emplace_back(hardblock);
+            strToPin.emplace(name, hardblock->pin.get());
         }
     }
 }
 
-void Parser::readPl(std::string const &filename)
+void Parser::readPl(Input *input, const std::string &filename)
 {
     std::ifstream fin(filename);
+    if (!fin)
+    {
+        std::cerr << "[Error] Cannot open \"" << filename << "\".\n";
+        exit(EXIT_FAILURE);
+    }
+
     std::string name;
-    int x, y;
+    int x = 0, y = 0;
     while (fin >> name >> x >> y)
-        strToPin.emplace(name, new Pin(name, x, y));
+    {
+        auto pin = new Pin(name, x, y);
+        input->fixedPins.emplace_back(pin);
+        strToPin.emplace(name, pin);
+    }
 }
 
-void Parser::readNet(std::string const &filename)
+void Parser::readNet(Input *input, const std::string &filename)
 {
     std::ifstream fin(filename);
+    if (!fin)
+    {
+        std::cerr << "[Error] Cannot open \"" << filename << "\".\n";
+        exit(EXIT_FAILURE);
+    }
+
     std::string identifier;
     while (fin >> identifier)
     {
         if (identifier == "NetDegree")
         {
-            nets.emplace_back(new Net());
-            std::string temp;
-            size_t pinNum;
-            fin >> temp >> pinNum;
+            auto net = new Net();
+            input->nets.emplace_back(net);
+
+            std::string _, name;
+            size_t pinNum = 0;
+            fin >> _ >> pinNum;
             for (size_t i = 0; i < pinNum; ++i)
             {
-                std::string name;
                 fin >> name;
-                nets.back()->pins.emplace_back(strToPin.at(name));
+                net->pins.emplace_back(strToPin[name]);
             }
         }
     }
 }
 
-SAInput *Parser::parse(char *argv[])
+Parser::Parser() {}
+
+Input::ptr Parser::parse(const std::string &hardblockFile, const std::string &plFile,
+                         const std::string &netFile, double deadspaceRatio)
 {
-    readHardblock(argv[1]);
-    readPl(argv[3]);
-    readNet(argv[2]);
-    return new SAInput(hardblocks, nets, std::stod(argv[5]));
+    auto input = new Input();
+    readHardblock(input, hardblockFile);
+    readPl(input, plFile);
+    readNet(input, netFile);
+    input->deadspaceRatio = deadspaceRatio;
+    return std::unique_ptr<Input>(input);
 }
