@@ -22,15 +22,15 @@ $(EXEC): $(OBJS)
 clean:
 	rm -rf $(EXEC) $(OBJS) $(DEPS)
 
-ifeq (test,$(firstword $(MAKECMDGOALS)))
-  TESTCASE_NAME := $(wordlist 2,$(words $(MAKECMDGOALS)),$(MAKECMDGOALS))
-  $(eval $(TESTCASE_NAME):;@:)
+ifeq (test, $(firstword $(MAKECMDGOALS)))
+  TESTCASE := $(word 2, $(MAKECMDGOALS))
+  $(eval $(TESTCASE):;@:)
 endif
 
 test: $(EXEC)
-	@echo test on $(TESTCASE_NAME)
-	./$(EXEC) ../testcase/$(TESTCASE_NAME).nets ../testcase/$(TESTCASE_NAME).cells ../output/$(TESTCASE_NAME).out
-	../verifier/verify ../testcase/$(TESTCASE_NAME).nets ../testcase/$(TESTCASE_NAME).cells ../output/$(TESTCASE_NAME).out
+	@echo test on $(TESTCASE)
+	./$(EXEC) ../testcase/$(TESTCASE).nets ../testcase/$(TESTCASE).cells ../output/$(TESTCASE).out
+	../verifier/verify ../testcase/$(TESTCASE).nets ../testcase/$(TESTCASE).cells ../output/$(TESTCASE).out
 
 .PHONY: all clean test
 -include $(DEPS)

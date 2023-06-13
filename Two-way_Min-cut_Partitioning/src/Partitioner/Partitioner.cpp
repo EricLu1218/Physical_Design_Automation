@@ -7,9 +7,8 @@
 
 void Partitioner::generateInitialPartition()
 {
-    // can set the random seed for different testcases or
-    // try several random seeds and take the best result as the final partition solution
-    int seed = 7122;
+    // can set the random seed for different testcases
+    int seed = 0;
     std::shuffle(input->cells.begin(), input->cells.end(), std::default_random_engine(seed));
     for (auto &cell : input->cells)
     {

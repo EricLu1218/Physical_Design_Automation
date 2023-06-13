@@ -27,11 +27,11 @@ $ ./FM_Partitioner ../testcase/p2-1.nets ../testcase/p2-1.cells ../output/p2-1.o
 ## How to Test
 In `Two-way_Min-cut_Partitioning/src/`, enter the following command:
 ```
-$ make test ${name}
+$ make test $name
 ```
-It will build an executable file, test on testcase ${name}, and run a verifier to verify the answer.
+It will build an executable file, test on testcase `$name`, and run a verifier to verify the answer.
 
-E.g., test on p2-1 and verify the answer
+E.g., test on p2-1 and verify the answer.
 ```
 $ make test p2-1
 ```
