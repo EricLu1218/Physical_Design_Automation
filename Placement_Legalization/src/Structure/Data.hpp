@@ -1,59 +1,70 @@
 #pragma once
+#include <memory>
 #include <string>
+#include <unordered_map>
 #include <vector>
 
 struct Cell
 {
-    std::string name;
-    int width, height, weight;
-    double x, y, optimalX, optimalY;
+    using ptr = std::unique_ptr<Cell>;
 
-    Cell(std::string const &name, int const &width, int const &height)
-        : name(name), width(width), height(height), weight(width), x(0), y(0), optimalX(0), optimalY(0) {}
+    std::string name;
+    int width, height;
+    double x, y;
+
+    int weight;
+    double optimalX, optimalY;
+
+    Cell();
+    Cell(const std::string &name, int width, int height);
 };
 
 struct Cluster
 {
-    double x, q;
-    int width, weight;
-    std::vector<Cell *> member;
+    double x;
+    int weight;
+    double q;
+    int width;
     Cluster *predecessor;
+    std::vector<Cell *> member;
 
-    Cluster(double const &x, Cluster *predecessor, int const &weight, double const &q, int const &width)
-        : x(x), q(q), width(width), weight(weight), predecessor(predecessor) {}
+    Cluster();
+    Cluster(double x, Cell *cell, Cluster *predecessor);
 };
 
 struct SubRow
 {
+    using ptr = std::unique_ptr<SubRow>;
+
     int minX, maxX, freeWidth;
+
     Cluster *lastCluster;
 
-    SubRow(int const &minX, int const &maxX)
-        : minX(minX), maxX(maxX), freeWidth(maxX - minX), lastCluster(nullptr) {}
-    inline void updateMinMax(int const &_minX, int const &_maxX)
-    {
-        this->minX = _minX;
-        this->maxX = _maxX;
-        this->freeWidth = _maxX - _minX;
-    }
+    SubRow();
+    SubRow(int minX, int maxX);
+    void updateMinMax(int minX_, int maxX_);
 };
 
 struct Row
 {
-    int width, height, y;
-    std::vector<SubRow *> subRows;
+    using ptr = std::unique_ptr<Row>;
 
-    Row(int const &width, int const &height, int const &y)
-        : width(width), height(height), y(y) {}
+    int y, height, siteWidth;
+    std::vector<SubRow::ptr> subRows;
+
+    Row();
+    Row(int y, int height, int siteWidth);
 };
 
-struct LegalizerInput
+struct Input
 {
-    int maxDisplacement;
-    std::vector<Cell *> cells, terminals;
-    std::vector<Row *> rows;
+    using ptr = std::unique_ptr<Input>;
 
-    LegalizerInput(int const &maxDisplacement, std::vector<Cell *> const &cells,
-                std::vector<Cell *> const &terminals, std::vector<Row *> const &rows)
-        : maxDisplacement(maxDisplacement), cells(cells), terminals(terminals), rows(rows) {}
+    int maxDisplacement;
+    std::vector<Cell::ptr> cells, blockages;
+    std::vector<Row::ptr> rows;
+
+    std::unordered_map<std::string, Cell *> strToCell;
+
+    Input();
 };

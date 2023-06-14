@@ -1,22 +1,38 @@
 #include "ResultWriter.hpp"
 #include <fstream>
+#include <iostream>
 
-void ResultWriter::write(char *argv[])
+ResultWriter::ResultWriter() {}
+
+void ResultWriter::addCell(const Cell *cell)
 {
-    std::string auxFilePath(argv[1]);
-    auto filename = auxFilePath.substr(auxFilePath.find_last_of('/') + 1,
-                                       auxFilePath.find_last_of('.') - auxFilePath.find_last_of('/') - 1);
-    std::ofstream fout("../output/" + filename + ".result");
-    for (auto const &cell : input->cells)
+    cells.emplace_back(cell->name, cell->optimalX, cell->optimalY);
+}
+
+void ResultWriter::addBlockage(const Cell *blockage)
+{
+    blockages.emplace_back(blockage->name, blockage->x, blockage->y);
+}
+
+void ResultWriter::write(const std::string &filename) const
+{
+    std::ofstream fout(filename);
+    if (!fout)
     {
-        fout << cell->name << ' '
-             << static_cast<int>(cell->optimalX) << ' '
-             << static_cast<int>(cell->optimalY) << " : N\n";
+        std::cerr << "[Error] Cannot open \"" << filename << "\".\n";
+        exit(EXIT_FAILURE);
     }
-    for (auto const &terminal : input->terminals)
+
+    std::string name;
+    int x = 0, y = 0;
+    for (const auto &cell : cells)
     {
-        fout << terminal->name << ' '
-             << static_cast<int>(terminal->x) << ' '
-             << static_cast<int>(terminal->y) << " : N /FIXED\n";
+        std::tie(name, x, y) = cell;
+        fout << name << " " << x << " " << y << " : N\n";
+    }
+    for (const auto &blockage : blockages)
+    {
+        std::tie(name, x, y) = blockage;
+        fout << name << " " << x << " " << y << " : N /FIXED\n";
     }
 }

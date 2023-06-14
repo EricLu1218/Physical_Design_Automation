@@ -1,115 +1,156 @@
 #include "Parser.hpp"
-#include <unordered_map>
+#include <fstream>
+#include <iostream>
+#include <sstream>
 
-void Parser::readAux(std::string const &filename)
+inline std::string strip(std::string input, std::string chars = " \t\r\n")
+{
+    input.erase(0, input.find_first_not_of(chars));
+    input.erase(input.find_last_not_of(chars) + 1);
+    return input;
+}
+
+void Parser::readAux(Input *input, const std::string &filename)
 {
     std::ifstream fin(filename);
+    if (!fin)
+    {
+        std::cerr << "[Error] Cannot open \"" << filename << "\".\n";
+        exit(EXIT_FAILURE);
+    }
+
     std::string buff;
     while (std::getline(fin, buff))
     {
+        buff = strip(buff);
         if (buff.empty())
             continue;
 
         std::stringstream buffStream(buff);
-        std::string identifier, temp;
+        std::string identifier, _;
         buffStream >> identifier;
         if (identifier == "RowBasedPlacement")
         {
-            buffStream >> temp >> this->nodeFile >> this->plFile >> this->sclFile;
+            buffStream >> _ >> nodeFile >> plFile >> sclFile;
         }
         else if (identifier == "MaxDisplacement")
         {
-            buffStream >> temp >> this->maxDisplacement;
+            buffStream >> _ >> input->maxDisplacement;
         }
     }
 }
 
-std::unordered_map<std::string, Cell *> strToCell;
-void Parser::readNode(std::string const &filename)
+void Parser::readNode(Input *input, const std::string &filename)
 {
     std::ifstream fin(filename);
-    size_t nodeNum = 0, terminalNum = 0;
+    if (!fin)
+    {
+        std::cerr << "[Error] Cannot open \"" << filename << "\".\n";
+        exit(EXIT_FAILURE);
+    }
+
+    size_t nodeNum = 0, blockageNum = 0;
     std::string buff;
     while (std::getline(fin, buff))
     {
+        buff = strip(buff);
         if (buff.empty())
             continue;
 
         std::stringstream buffStream(buff);
-        std::string identifier, temp;
+        std::string identifier, _;
         buffStream >> identifier;
-        if (identifier == "UCLA" || identifier.at(0) == '#')
+        if (identifier == "UCLA" || identifier[0] == '#')
         {
             continue;
         }
         else if (identifier == "NumNodes")
         {
-            buffStream >> temp >> nodeNum;
+            buffStream >> _ >> nodeNum;
         }
         else if (identifier == "NumTerminals")
         {
-            buffStream >> temp >> terminalNum;
+            buffStream >> _ >> blockageNum;
             break;
         }
     }
-    std::getline(fin, buff);
 
-    size_t const cellNum = nodeNum - terminalNum;
-    for (size_t i = 0; i < nodeNum; ++i)
+    size_t cellNum = nodeNum - blockageNum;
+    while (std::getline(fin, buff))
     {
-        std::getline(fin, buff);
+        buff = strip(buff);
+        if (buff.empty())
+            continue;
+
         std::stringstream buffStream(buff);
         std::string name;
         int width = 0, height = 0;
         buffStream >> name >> width >> height;
         auto cell = new Cell(name, width, height);
-        if (i < cellNum)
-            this->cells.emplace_back(cell);
+        if (input->cells.size() < cellNum)
+            input->cells.emplace_back(cell);
         else
-            this->terminals.emplace_back(cell);
-        strToCell.emplace(name, cell);
+            input->blockages.emplace_back(cell);
+        input->strToCell.emplace(name, cell);
     }
 }
 
-void Parser::readPl(std::string const &filename)
+void Parser::readPl(Input *input, const std::string &filename)
 {
     std::ifstream fin(filename);
-    std::string buff;
-    std::getline(fin, buff);
-    std::getline(fin, buff);
-
-    for (size_t i = 0; i < this->cells.size() + this->terminals.size(); ++i)
+    if (!fin)
     {
-        std::getline(fin, buff);
-        std::stringstream buffStream(buff);
-        std::string name;
-        double x = 0, y = 0;
-        buffStream >> name >> x >> y;
-        strToCell.at(name)->x = x;
-        strToCell.at(name)->y = y;
+        std::cerr << "[Error] Cannot open \"" << filename << "\".\n";
+        exit(EXIT_FAILURE);
     }
-}
 
-void Parser::readScl(std::string const &filename)
-{
-    std::ifstream fin(filename);
-    size_t rowNum = 0;
     std::string buff;
     while (std::getline(fin, buff))
     {
+        buff = strip(buff);
         if (buff.empty())
             continue;
 
         std::stringstream buffStream(buff);
-        std::string identifier, temp;
+        std::string name;
+        buffStream >> name;
+        if (name == "UCLA")
+            continue;
+
+        double x = 0, y = 0;
+        buffStream >> x >> y;
+        input->strToCell[name]->x = x;
+        input->strToCell[name]->y = y;
+    }
+}
+
+void Parser::readScl(Input *input, const std::string &filename)
+{
+    std::ifstream fin(filename);
+    if (!fin)
+    {
+        std::cerr << "[Error] Cannot open \"" << filename << "\".\n";
+        exit(EXIT_FAILURE);
+    }
+
+    size_t rowNum = 0;
+    std::string buff;
+    while (std::getline(fin, buff))
+    {
+        buff = strip(buff);
+        if (buff.empty())
+            continue;
+
+        std::stringstream buffStream(buff);
+        std::string identifier, _;
         buffStream >> identifier;
-        if (identifier == "UCLA" || identifier.at(0) == '#')
+        if (identifier == "UCLA" || identifier[0] == '#')
         {
             continue;
         }
         else if (identifier == "NumRows")
         {
-            buffStream >> temp >> rowNum;
+            buffStream >> _ >> rowNum;
             break;
         }
     }
@@ -119,48 +160,48 @@ void Parser::readScl(std::string const &filename)
         int y = 0, height = 0, siteWidth = 0, x = 0, siteNum = 0;
         while (std::getline(fin, buff))
         {
+            buff = strip(buff);
             if (buff.empty())
                 continue;
 
             std::stringstream buffStream(buff);
-            std::string identifier, temp;
+            std::string identifier, _;
             buffStream >> identifier;
             if (identifier == "Coordinate")
             {
-                buffStream >> temp >> y;
+                buffStream >> _ >> y;
             }
             else if (identifier == "Height")
             {
-                buffStream >> temp >> height;
+                buffStream >> _ >> height;
             }
             else if (identifier == "Sitewidth")
             {
-                buffStream >> temp >> siteWidth;
+                buffStream >> _ >> siteWidth;
             }
             else if (identifier == "SubrowOrigin")
             {
-                buffStream >> temp >> x >> temp >> temp >> siteNum;
+                buffStream >> _ >> x >> _ >> _ >> siteNum;
             }
             else if (identifier == "End")
             {
-                auto row = new Row(siteWidth, height, y);
+                auto row = new Row(y, height, siteWidth);
                 row->subRows.emplace_back(new SubRow(x, x + siteWidth * siteNum));
-                this->rows.emplace_back(row);
+                input->rows.emplace_back(row);
                 break;
             }
         }
     }
 }
 
-LegalizerInput *Parser::parse(char argv[])
+Input::ptr Parser::parse(const std::string &filename)
 {
-    std::string auxFilePath(argv);
-    readAux(auxFilePath);
+    auto input = new Input();
+    readAux(input, filename);
 
-    std::string inputPath = auxFilePath.substr(0, auxFilePath.find_last_of('/'));
-    readNode(inputPath + '/' + this->nodeFile);
-    readPl(inputPath + '/' + this->plFile);
-    readScl(inputPath + '/' + this->sclFile);
-
-    return new LegalizerInput(this->maxDisplacement, this->cells, this->terminals, this->rows);
+    std::string filepath = filename.substr(0, filename.find_last_of('/')) + "/";
+    readNode(input, filepath + nodeFile);
+    readPl(input, filepath + plFile);
+    readScl(input, filepath + sclFile);
+    return std::unique_ptr<Input>(input);
 }

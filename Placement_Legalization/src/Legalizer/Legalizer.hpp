@@ -4,19 +4,19 @@
 
 class Legalizer
 {
-    LegalizerInput *input;
+    Input *input;
 
     void divideRow();
-    int getRowIdx(Cell const *cell);
-    int getSubRowIdx(Row const *row, Cell const *cell);
-    int placeRowTrail(int const &rowIdx, Cell *cell);
-    void placeRowFinal(int const &rowIdx, int const &subRowIdx, Cell *cell);
-    double calCost(Cell const *cell);
+    int getRowIdx(const Cell *cell) const;
+    int getSubRowIdx(const Row *row, const Cell *cell) const;
+    int placeRowTrail(const Row *row, Cell *cell);
+    void placeRowFinal(SubRow *subRow, Cell *cell);
+    double calCost(const Cell *cell) const;
     void determinePosition();
     void abacusProcess();
-    void calDisplacement();
+    std::pair<double, double> getTotalAndMaxDisplacement() const;
 
 public:
-    Legalizer(LegalizerInput *input) : input(input) {}
-    ResultWriter *solve();
+    Legalizer(Input *input);
+    ResultWriter::ptr solve();
 };

@@ -2,11 +2,11 @@
 Implement an existing algorithm, called “Abacus”, to legalize a given global placement result with minimal displacement.
 
 ## How to Compile
-In this directory, enter the following command:
+In `Placement_Legalization/src/`, enter the following command:
 ```
 $ make
 ```
-It will generate the executable file "hw4" in "Placement_Legalization/bin/".
+An executable file `hw4` will be generated in `Placement_Legalization/bin/`.
 
 If you want to remove it, please enter the following command:
 ```
@@ -14,34 +14,26 @@ $ make clean
 ```
 
 ## How to Run
-**In this directory, enter the following command:**
+Usage:
 ```
-Usage: ../bin/<exe> <aux file>
+$ ./hw4 [-o output_file] <aux file>
 ```
+The default output filepath is `../output/<aux filename>.result`. If you want to specify the output file path, please add `-o <prefer output filepath>` when executing the command.
 
-e.g.
-```
-$ ../bin/hw4 ../testcase/adaptec1/adaptec1.aux
-```
-
-**In "Placement_Legalization/bin/", enter the following command:**
-```
-Usage: ./<exe> <aux file>
-```
-
-e.g.
+E.g.,
 ```
 $ ./hw4 ../testcase/adaptec1/adaptec1.aux
 ```
+The output filepath of this example is `../output/adaptec1.result`.
 
 ## How to Test
-In this directory, enter the following command:
+In `Placement_Legalization/src/`, enter the following command:
 ```
-$ make test $(name)
+$ make test $name
 ```
-It will test on $(name) and run verifier to verify the answer.
+It will build an executable file, test on testcase `$name`, and run a verifier to verify the answer.
 
-e.g. test on adaptec1 and verify the answer
+E.g., test on adaptec1 and verify the answer.
 ```
 $ make test adaptec1
 ```

@@ -1,41 +1,38 @@
-#include "GlobalTimer/GlobalTimer.hpp"
 #include "Legalizer/Legalizer.hpp"
+#include "Parser/ArgumentParser.hpp"
 #include "Parser/Parser.hpp"
-#include "Structure/Data.hpp"
-#include <iostream>
+#include "Timer/Timer.hpp"
 
-int main(int argc, char **argv)
+int main(int argc, char *argv[])
 {
-    if (argc < 2)
-    {
-        std::cerr << "Usage: " << argv[0] << " <aux file>\n";
-        return 0;
-    }
+    ArgumentParser argParser;
+    if (!argParser.parse(argc, argv))
+        return 1;
 
-    GlobalTimer globalTimer(10 * 60 - 5);
-    globalTimer.startTimer("runtime");
-    globalTimer.startTimer("parse input");
+    Timer timer(10 * 60 - 5);
+    timer.startTimer("runtime");
+    timer.startTimer("parse input");
 
     Parser parser;
-    auto input = parser.parse(argv[1]);
+    auto input = parser.parse(argParser.auxFile);
 
-    globalTimer.stopTimer("parse input");
-    globalTimer.startTimer("abacus process");
+    timer.stopTimer("parse input");
+    timer.startTimer("abacus process");
 
-    Legalizer legalizer(input);
+    Legalizer legalizer(input.get());
     auto result = legalizer.solve();
 
-    globalTimer.stopTimer("abacus process");
-    globalTimer.startTimer("write output");
+    timer.stopTimer("abacus process");
+    timer.startTimer("write output");
 
-    result->write(argv);
+    result->write(argParser.outputFile);
 
-    globalTimer.stopTimer("write output");
-    globalTimer.stopTimer("runtime");
+    timer.stopTimer("write output");
+    timer.stopTimer("runtime");
 
-    globalTimer.printTime("parse input");
-    globalTimer.printTime("abacus process");
-    globalTimer.printTime("write output");
-    globalTimer.printTime("runtime");
+    timer.printTime("parse input");
+    timer.printTime("abacus process");
+    timer.printTime("write output");
+    timer.printTime("runtime");
     return 0;
 }
