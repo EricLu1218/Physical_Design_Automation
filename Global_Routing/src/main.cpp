@@ -1,40 +1,38 @@
-#include "GlobalTimer/GlobalTimer.hpp"
+#include "Parser/ArgumentParser.hpp"
 #include "Parser/Parser.hpp"
 #include "Router/Router.hpp"
-#include <iostream>
+#include "Timer/Timer.hpp"
 
 int main(int argc, char *argv[])
 {
-    if (argc < 3)
-    {
-        std::cerr << "Usage: " << argv[0] << " <modified.txt file> <result file>\n";
-        return 0;
-    }
+    ArgumentParser argParser;
+    if (!argParser.parse(argc, argv))
+        return 1;
 
-    GlobalTimer globalTimer(10 * 60 * 60 - 5);
-    globalTimer.startTimer("runtime");
-    globalTimer.startTimer("parse input");
+    Timer timer(10 * 60 - 5);
+    timer.startTimer("runtime");
+    timer.startTimer("parse input");
 
     Parser parser;
-    auto input = parser.parse(argv);
+    auto input = parser.parse(argParser.inputFile);
 
-    globalTimer.stopTimer("parse input");
-    globalTimer.startTimer("routing process");
+    timer.stopTimer("parse input");
+    timer.startTimer("routing process");
 
-    Router router(input, globalTimer);
+    Router router(input.get(), timer);
     auto result = router.solve();
 
-    globalTimer.stopTimer("routing process");
-    globalTimer.startTimer("write output");
+    timer.stopTimer("routing process");
+    timer.startTimer("write output");
 
-    result->write(argv[2]);
+    result->write(argParser.outputFile);
 
-    globalTimer.stopTimer("write output");
-    globalTimer.stopTimer("runtime");
+    timer.stopTimer("write output");
+    timer.stopTimer("runtime");
 
-    globalTimer.printTime("parse input");
-    globalTimer.printTime("routing process");
-    globalTimer.printTime("write output");
-    globalTimer.printTime("runtime");
+    timer.printTime("parse input");
+    timer.printTime("routing process");
+    timer.printTime("write output");
+    timer.printTime("runtime");
     return 0;
 }

@@ -1,70 +1,87 @@
 #include "Router.hpp"
 #include <algorithm>
 #include <cassert>
+#include <iomanip>
 #include <iostream>
 #include <random>
 
-Edge *Router::getEdge(int const &x, int const &y, int const &direction)
+Edge *Router::getEdge(int x, int y, int direction)
 {
-    assert(direction != Direction::STOP);
-
     if (direction == Direction::LEFT)
-        return &hEdges.at(y).at(x - 1);
+        return &hEdges[y][x - 1];
     else if (direction == Direction::RIGHT)
-        return &hEdges.at(y).at(x);
+        return &hEdges[y][x];
     else if (direction == Direction::UP)
-        return &vEdges.at(y).at(x);
+        return &vEdges[y][x];
     else if (direction == Direction::DOWN)
-        return &vEdges.at(y - 1).at(x);
+        return &vEdges[y - 1][x];
     return nullptr;
 }
 
-double Router::calCost(Edge const *edge)
+double Router::calCost(const Edge *edge) const
 {
-    double historical = 0;
-    if (edge->demand() > edge->capacity)
-        historical = edge->historicalCost + 1;
-    else
-        historical = edge->historicalCost;
+    double historicalCost = edge->historicalCost;
+    if (edge->overflow())
+        ++historicalCost;
     double penalty = std::pow(static_cast<double>(edge->demand() + 1) / edge->capacity, k1);
-    return baseCost + historical * penalty;
+    return baseCost + historicalCost * penalty;
 }
 
-Node outOfBoundary(-1, -1, -1);
-Node Router::wavePropagation(Node const &current, Node const &target, int const &direction)
+int Router::getTotalOverflow() const
+{
+    int overflow = 0;
+    for (const auto &row : hEdges)
+        for (const auto &edge : row)
+            overflow += edge.overflow();
+    for (const auto &row : vEdges)
+        for (const auto &edge : row)
+            overflow += edge.overflow();
+    return overflow;
+}
+
+int Router::getWirelength() const
+{
+    int wirelength = 0;
+    for (const auto &net : input->nets)
+        wirelength += net->wirelength();
+    return wirelength;
+}
+
+RoutingNode outOfBoundary(-1, -1, -1);
+RoutingNode Router::propagate(const RoutingNode &current, const RoutingNode &target, int direction)
 {
     auto next = current;
     if (direction == Direction::LEFT)
     {
-        next.x -= 1;
+        --next.x;
         if (next.x < 0)
             return outOfBoundary;
         if (current.x <= target.x)
-            next.cost += 1;
+            ++next.cost;
     }
     else if (direction == Direction::RIGHT)
     {
-        next.x += 1;
+        ++next.x;
         if (next.x > input->hGridCnt - 1)
             return outOfBoundary;
         if (current.x >= target.x)
-            next.cost += 1;
+            ++next.cost;
     }
     else if (direction == Direction::UP)
     {
-        next.y += 1;
+        ++next.y;
         if (next.y > input->vGridCnt - 1)
             return outOfBoundary;
         if (current.y >= target.y)
-            next.cost += 1;
+            ++next.cost;
     }
     else if (direction == Direction::DOWN)
     {
-        next.y -= 1;
+        --next.y;
         if (next.y < 0)
             return outOfBoundary;
         if (current.y <= target.y)
-            next.cost += 1;
+            ++next.cost;
     }
     else
     {
@@ -74,172 +91,148 @@ Node Router::wavePropagation(Node const &current, Node const &target, int const 
     return next;
 }
 
+void Router::wavePropagate(const RoutingNode &source, RoutingNode &target, const std::vector<int> directions)
+{
+    for (auto &row : routingGrid)
+        for (auto &gridNode : row)
+            gridNode.reset();
+    routingGrid[source.y][source.x].cost = 0;
+
+    std::priority_queue<RoutingNode, std::vector<RoutingNode>, RoutingNode> routingQueue;
+    routingQueue.push(source);
+    while (!routingQueue.empty())
+    {
+        auto current = routingQueue.top();
+        routingQueue.pop();
+
+        if (current.x == target.x && current.y == target.y)
+        {
+            target.cost = current.cost;
+            continue;
+        }
+
+        if (target.cost != -1 && current.cost >= target.cost)
+            continue;
+
+        for (auto direction : directions)
+        {
+            const auto &next = propagate(current, target, direction);
+            if (next.cost == -1)
+                continue;
+
+            auto &nextGridNode = routingGrid[next.y][next.x];
+            if (nextGridNode.cost != -1 && next.cost >= nextGridNode.cost)
+                continue;
+
+            nextGridNode.cost = next.cost;
+            nextGridNode.prevDirection = direction;
+            routingQueue.push(next);
+        }
+    }
+}
+
 void Router::traceBack(Net *net)
 {
     net->routingPath.clear();
     int x = net->x2, y = net->y2;
-    while (routingMap.at(y).at(x).prevDirection != -1)
+    while (routingGrid[y][x].prevDirection != Direction::STOP)
     {
         net->routingPath.emplace_back(x, y);
-        int const &direction = routingMap.at(y).at(x).prevDirection;
-        if (direction == Direction::LEFT)
+        int prevDirection = routingGrid[y][x].prevDirection;
+        if (prevDirection == Direction::LEFT)
         {
             getEdge(x, y, Direction::RIGHT)->passNets.emplace(net);
-            x += 1;
+            ++x;
         }
-        else if (direction == Direction::RIGHT)
+        else if (prevDirection == Direction::RIGHT)
         {
             getEdge(x, y, Direction::LEFT)->passNets.emplace(net);
-            x -= 1;
+            --x;
         }
-        else if (direction == Direction::UP)
+        else if (prevDirection == Direction::UP)
         {
             getEdge(x, y, Direction::DOWN)->passNets.emplace(net);
-            y -= 1;
+            --y;
         }
-        else if (direction == Direction::DOWN)
+        else if (prevDirection == Direction::DOWN)
         {
             getEdge(x, y, Direction::UP)->passNets.emplace(net);
-            y += 1;
+            ++y;
         }
     }
     net->routingPath.emplace_back(x, y);
 }
 
-void Router::routeNet(Net *net)
+void Router::monotonicRouting(Net *net)
 {
-    Node source(net->x1, net->y1, 0), target(net->x2, net->y2, -1);
-
-    for (auto &y : routingMap)
-        for (auto &x : y)
-            x.reset();
-    routingMap.at(source.y).at(source.x).cost = 0;
-
-    std::vector<int> directions(2, Direction::STOP); // {direction x, direction y}
+    RoutingNode source(net->x1, net->y1, 0), target(net->x2, net->y2, -1);
+    std::vector<int> directions(2, Direction::STOP);
     if (source.x > target.x)
-        directions.at(0) = Direction::LEFT;
+        directions[0] = Direction::LEFT;
     else if (source.x < target.x)
-        directions.at(0) = Direction::RIGHT;
+        directions[0] = Direction::RIGHT;
     if (source.y < target.y)
-        directions.at(1) = Direction::UP;
+        directions[1] = Direction::UP;
     else if (source.y > target.y)
-        directions.at(1) = Direction::DOWN;
-
-    std::priority_queue<Node, std::vector<Node>, Node> routingQueue;
-    routingQueue.push(source);
-    while (routingQueue.empty() == false)
-    {
-        auto current = routingQueue.top();
-        routingQueue.pop();
-
-        if (current.x == target.x && current.y == target.y)
-        {
-            target.cost = current.cost;
-            continue;
-        }
-
-        if (target.cost != -1 && current.cost >= target.cost)
-            continue;
-
-        for (auto const direction : directions)
-        {
-            auto const &next = wavePropagation(current, target, direction);
-            if (next.cost == -1)
-                continue;
-
-            auto &routingNode = routingMap.at(next.y).at(next.x);
-            if (routingNode.cost != -1 && next.cost >= routingNode.cost)
-                continue;
-
-            routingNode.cost = next.cost;
-            routingNode.prevDirection = direction;
-            routingQueue.push(next);
-        }
-    }
-
+        directions[1] = Direction::DOWN;
+    wavePropagate(source, target, directions);
     traceBack(net);
 }
 
-void Router::getRipUpQueue(std::priority_queue<Edge *, std::vector<Edge *>, Edge> &ripUpQueue)
+std::priority_queue<Edge *, std::vector<Edge *>, Edge> Router::getRipupQueue()
 {
-    for (auto &y : hEdges)
-        for (auto &x : y)
-            if (x.overflow() > 0)
-            {
-                x.historicalCost += 1;
-                ripUpQueue.push(&x);
-            }
-    for (auto &y : vEdges)
-        for (auto &x : y)
-            if (x.overflow() > 0)
-            {
-                x.historicalCost += 1;
-                ripUpQueue.push(&x);
-            }
-}
-
-void Router::rerouteNet(Net *net)
-{
-    Node source(net->x1, net->y1, 0), target(net->x2, net->y2, -1);
-
-    for (auto &y : routingMap)
-        for (auto &x : y)
-            x.reset();
-    routingMap.at(source.y).at(source.x).cost = 0;
-
-    std::priority_queue<Node, std::vector<Node>, Node> routingQueue;
-    routingQueue.push(source);
-    while (routingQueue.empty() == false)
+    std::priority_queue<Edge *, std::vector<Edge *>, Edge> ripupQueue;
+    for (auto &row : hEdges)
     {
-        auto current = routingQueue.top();
-        routingQueue.pop();
-
-        if (current.x == target.x && current.y == target.y)
+        for (auto &edge : row)
         {
-            target.cost = current.cost;
-            continue;
-        }
-
-        if (target.cost != -1 && current.cost >= target.cost)
-            continue;
-
-        for (int direction = 0; direction < 4; ++direction)
-        {
-            auto const &next = wavePropagation(current, target, direction);
-            if (next.cost == -1)
-                continue;
-
-            auto &routingNode = routingMap.at(next.y).at(next.x);
-            if (routingNode.cost != -1 && next.cost >= routingNode.cost)
-                continue;
-
-            routingNode.cost = next.cost;
-            routingNode.prevDirection = direction;
-            routingQueue.push(next);
+            if (edge.overflow())
+            {
+                ++edge.historicalCost;
+                ripupQueue.push(&edge);
+            }
         }
     }
+    for (auto &row : vEdges)
+    {
+        for (auto &edge : row)
+        {
+            if (edge.overflow())
+            {
+                ++edge.historicalCost;
+                ripupQueue.push(&edge);
+            }
+        }
+    }
+    return ripupQueue;
+}
 
+void Router::mazeRouting(Net *net)
+{
+    RoutingNode source(net->x1, net->y1, 0), target(net->x2, net->y2, -1);
+    std::vector<int> directions = {Direction::LEFT, Direction::RIGHT, Direction::UP, Direction::DOWN};
+    wavePropagate(source, target, directions);
     traceBack(net);
 }
 
-void Router::ripUpReroute(std::unordered_set<Net *> passNets)
+void Router::ripupReroute(std::unordered_set<Net *> passNets)
 {
     std::priority_queue<Net *, std::vector<Net *>, Net> rerouteQueue;
-    for (auto const &net : passNets)
+    for (const auto net : passNets)
     {
         int cost = 0;
-        for (size_t i = 0; i < net->routingPath.size() - 1; ++i)
+        for (size_t i = 1; i < net->routingPath.size(); ++i)
         {
-            auto const &point1 = net->routingPath.at(i),
-                       &point2 = net->routingPath.at(i + 1);
+            const auto &point1 = net->routingPath[i - 1];
+            const auto &point2 = net->routingPath[i];
             int direction = Direction::STOP;
-            if (point1.x > point2.x && point1.y == point2.y)
+            if (point1.x > point2.x)
                 direction = Direction::LEFT;
-            else if (point1.x < point2.x && point1.y == point2.y)
+            else if (point1.x < point2.x)
                 direction = Direction::RIGHT;
-            else if (point1.x == point2.x && point1.y < point2.y)
+            else if (point1.y < point2.y)
                 direction = Direction::UP;
-            else if (point1.x == point2.x && point1.y > point2.y)
+            else if (point1.y > point2.y)
                 direction = Direction::DOWN;
             else
                 continue;
@@ -253,37 +246,30 @@ void Router::ripUpReroute(std::unordered_set<Net *> passNets)
         rerouteQueue.push(net);
     }
 
-    while (rerouteQueue.empty() == false)
+    while (!rerouteQueue.empty())
     {
         auto net = rerouteQueue.top();
         rerouteQueue.pop();
-        rerouteNet(net);
+        mazeRouting(net);
     }
 }
 
-int Router::calTotalOverflow()
+Router::Router(Input *input, Timer &timer) : input(input), timer(timer), k1(5), baseCost(0)
 {
-    int overflow = 0;
-    for (auto const &y : hEdges)
-        for (auto const &x : y)
-            overflow += x.overflow();
-    for (auto const &y : vEdges)
-        for (auto const &x : y)
-            overflow += x.overflow();
-    return overflow;
+    hEdges = std::vector<std::vector<Edge>>(input->vGridCnt, std::vector<Edge>(input->hGridCnt - 1, input->hCapacity));
+    vEdges = std::vector<std::vector<Edge>>(input->vGridCnt - 1, std::vector<Edge>(input->hGridCnt, input->vCapacity));
+    routingGrid = std::vector<std::vector<GridNode>>(input->vGridCnt, std::vector<GridNode>(input->hGridCnt));
+    std::cout << "----- DESIGN INFORMATION -----\n"
+              << "#grid row/col:       " << input->vGridCnt << " " << input->hGridCnt << "\n"
+              << "#net:                " << input->nets.size() << "\n"
+              << "Horizontal capacity: " << input->hCapacity << "\n"
+              << "Vertical capacity:   " << input->vCapacity << "\n"
+              << "\n";
 }
 
-int Router::calWirelength()
+ResultWriter::ptr Router::solve()
 {
-    int wirelength = 0;
-    for (auto const &net : input->nets)
-        wirelength += net->wirelength();
-    return wirelength;
-}
-
-ResultWriter *Router::solve()
-{
-    /* choose seed for each testcase (Platform: nthucad ic26) */
+    // can set the random seed for different testcases
     int seed = 0, testcase = 0;
     if (input->nets.size() == 13357)
     {
@@ -300,38 +286,44 @@ ResultWriter *Router::solve()
         seed = 76;
         testcase = 3;
     }
-
     std::shuffle(input->nets.begin(), input->nets.end(), std::default_random_engine(seed));
-    for (auto const &net : input->nets)
-        routeNet(net);
-    int overflow = calTotalOverflow();
-    std::cerr << "initial overflow:   " << overflow << '\n';
 
+    std::cout << "------ INITIAL ROUTING ------\n";
+    for (auto &net : input->nets)
+        monotonicRouting(net.get());
+    int overflow = getTotalOverflow();
+    std::cout << "Wirelength:             " << getWirelength() << "\n"
+              << "Overflow:               " << overflow << "\n"
+              << "\n";
+
+    std::cout << "----- RIPUP AND REROUTE -----\n";
     int iteration = 1;
     while (overflow > 0)
     {
         baseCost = 1.0 - exp(-5 * exp(-0.1 * iteration));
-
-        std::priority_queue<Edge *, std::vector<Edge *>, Edge> ripUpQueue;
-        getRipUpQueue(ripUpQueue);
-        while (overflow > 0 && ripUpQueue.empty() == false)
+        auto ripupQueue = getRipupQueue();
+        while (overflow > 0 && !ripupQueue.empty())
         {
-            auto edge = ripUpQueue.top();
-            ripUpQueue.pop();
-            ripUpReroute(edge->passNets);
-
-            overflow = calTotalOverflow();
-            if ((testcase == 3 && overflow <= 100) || globalTimer.overTime() == true)
+            auto edge = ripupQueue.top();
+            ripupQueue.pop();
+            ripupReroute(edge->passNets);
+            overflow = getTotalOverflow();
+            if ((testcase == 3 && overflow <= 100) || timer.overTime())
             {
-                std::cerr << "reroute overflow:   " << overflow << '\n';
+                std::cout << "Iteration " << std::setw(3) << iteration << " overflow: " << overflow << "\n";
                 goto finishRouting;
             }
         }
-        std::cerr << "reroute overflow:   " << overflow << '\n';
-        iteration += 1;
+        std::cout << "Iteration " << std::setw(3) << iteration << " overflow: " << overflow << "\n";
+        ++iteration;
     }
 finishRouting:;
-    std::cerr << "total wirelength:   " << calWirelength() << '\n';
+    std::cout << "Wirelength:             " << getWirelength() << "\n"
+              << "Overflow:               " << overflow << "\n"
+              << "\n";
 
-    return new ResultWriter(input);
+    auto result = new ResultWriter();
+    for (const auto &net : input->nets)
+        result->addResult(net.get());
+    return std::unique_ptr<ResultWriter>(result);
 }

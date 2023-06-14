@@ -1,54 +1,53 @@
 #include "Parser.hpp"
 #include <fstream>
+#include <iostream>
 #include <sstream>
 
-void Parser::readModifiedTxt(std::string const &filename)
+void Parser::readInput(Input *input, const std::string &filename)
 {
     std::ifstream fin(filename);
+    if (!fin)
+    {
+        std::cerr << "[Error] Cannot open \"" << filename << "\".\n";
+        exit(EXIT_FAILURE);
+    }
+
     std::string buff;
     while (std::getline(fin, buff))
     {
         std::stringstream buffStream(buff);
-        std::string identifier;
+        std::string identifier, _;
         buffStream >> identifier;
 
         if (identifier == "grid")
         {
-            buffStream >> this->hGridCnt >> this->vGridCnt;
-        }
-        else if (identifier == "vertical")
-        {
-            std::string temp;
-            buffStream >> temp >> this->vCapacity;
+            buffStream >> input->hGridCnt >> input->vGridCnt;
         }
         else if (identifier == "horizontal")
         {
-            std::string temp;
-            buffStream >> temp >> this->hCapacity;
+            buffStream >> _ >> input->hCapacity;
+        }
+        else if (identifier == "vertical")
+        {
+            buffStream >> _ >> input->vCapacity;
         }
         else if (identifier.substr(0, 3) == "net")
         {
             int id = 0;
             buffStream >> id;
 
-            std::getline(fin, buff);
-            std::stringstream point1(buff);
-            int x1 = 0, y1 = 0;
-            point1 >> x1 >> y1;
-
-            std::getline(fin, buff);
-            std::stringstream point2(buff);
-            int x2 = 0, y2 = 0;
-            point2 >> x2 >> y2;
-
-            this->nets.push_back(new Net(identifier, id, x1, y1, x2, y2));
+            int x1 = 0, y1 = 0, x2 = 0, y2 = 0;
+            fin >> x1 >> y1 >> x2 >> y2;
+            input->nets.emplace_back(new Net(identifier, id, x1, y1, x2, y2));
         }
     }
 }
 
-RouterInput *Parser::parse(char *argv[])
+Parser::Parser() {}
+
+Input::ptr Parser::parse(const std::string &filename)
 {
-    readModifiedTxt(argv[1]);
-    return new RouterInput(hGridCnt, vGridCnt,
-                           hCapacity, vCapacity, nets);
+    auto input = new Input();
+    readInput(input, filename);
+    return std::unique_ptr<Input>(input);
 }

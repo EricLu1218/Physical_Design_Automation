@@ -2,11 +2,11 @@
 Implement an existing algorithm to solve the global routing problem with a set of 2-pin nets while minimizing the total wirelength.
 
 ## How to Compile
-In this directory, enter the following command:
+In `Global_Routing/src/`, enter the following command:
 ```
 $ make
 ```
-It will generate the executable file "hw5" in "Global_Routing/bin/".
+An executable file `hw5` will be generated in `Global_Routing/bin/`.
 
 If you want to remove it, please enter the following command:
 ```
@@ -14,34 +14,24 @@ $ make clean
 ```
 
 ## How to Run
-**In this directory, enter the following command:**
+Usage:
 ```
-Usage: ../bin/<exe> <modified.txt file> <result file>
-```
-
-e.g.
-```
-$ ../bin/hw5 ../testcase/ibm01.modified.txt ../output/ibm01.result
+$ ./hw5 <input file> <output file>
 ```
 
-**In "Global_Routing/bin/", enter the following command:**
-```
-Usage: ./<exe> <modified.txt file> <result file>
-```
-
-e.g.
+E.g.,
 ```
 $ ./hw5 ../testcase/ibm01.modified.txt ../output/ibm01.result
 ```
 
 ## How to Test
-In this directory, enter the following command:
+In `Global_Routing/src/`, enter the following command:
 ```
-$ make test $(name)
+$ make test $name
 ```
-It will test on $(name) and run verifier to verify the answer.
+It will build an executable file, test on testcase `$name`, and run a verifier to verify the answer.
 
-e.g. test on ibm01 and verify the answer
+E.g., test on ibm01 and verify the answer.
 ```
 $ make test ibm01
 ```

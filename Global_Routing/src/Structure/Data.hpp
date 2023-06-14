@@ -1,59 +1,42 @@
 #pragma once
 #include <cmath>
+#include <memory>
 #include <string>
 #include <unordered_set>
 #include <vector>
 
-struct Net
+struct Point
 {
-    struct Point
-    {
-        int x, y;
+    int x, y;
 
-        Point(int const &x, int const &y) : x(x), y(y) {}
-    };
-
-    std::string name;
-    int id, x1, y1, x2, y2, hpwl, overflow;
-    std::vector<Point> routingPath;
-
-    Net() {}
-    Net(std::string name, int id, int x1, int y1, int x2, int y2)
-        : name(name), id(id), x1(x1), y1(y1), x2(x2), y2(y2),
-          hpwl(std::abs(x1 - x2) + std::abs(y1 - y2)), overflow(0) {}
-    inline bool operator()(Net const *A, Net const *B) const
-    {
-        if (A->overflow == B->overflow)
-            return A->hpwl > B->hpwl;
-        else
-            return A->overflow < B->overflow;
-    }
-
-    int wirelength() const
-    {
-        if (routingPath.empty() == true)
-            return 0;
-
-        int _wirelength = 0;
-        for (size_t i = 0; i < routingPath.size() - 1; ++i)
-        {
-            auto const &point1 = routingPath[i],
-                       &point2 = routingPath[i + 1];
-            _wirelength += std::abs(point1.x - point2.x) + std::abs(point1.y - point2.y);
-        }
-        return _wirelength;
-    }
+    Point();
+    Point(int x, int y);
 };
 
-struct RouterInput
+struct Net
 {
-    int hGridCnt, vGridCnt, hCapacity, vCapacity;
-    std::vector<Net *> nets;
+    using ptr = std::unique_ptr<Net>;
 
-    RouterInput(int hGridCnt, int vGridCnt,
-                int hCapacity, int vCapacity, std::vector<Net *> nets)
-        : hGridCnt(hGridCnt), vGridCnt(vGridCnt),
-          hCapacity(hCapacity), vCapacity(vCapacity), nets(nets) {}
+    std::string name;
+    int id, x1, y1, x2, y2;
+
+    int hpwl, overflow;
+    std::vector<Point> routingPath;
+
+    Net();
+    Net(const std::string &name, int id, int x1, int y1, int x2, int y2);
+    bool operator()(const Net *a, const Net *b) const;
+    int wirelength() const;
+};
+
+struct Input
+{
+    using ptr = std::unique_ptr<Input>;
+
+    int hGridCnt, vGridCnt, hCapacity, vCapacity;
+    std::vector<Net::ptr> nets;
+
+    Input();
 };
 
 struct Edge
@@ -62,44 +45,38 @@ struct Edge
     double historicalCost;
     std::unordered_set<Net *> passNets;
 
-    Edge() {}
-    Edge(int const &capacity) : capacity(capacity), historicalCost(1) {}
-    inline bool operator()(Edge const *A, Edge const *B) const
-    {
-        return A->overflow() < B->overflow();
-    }
-
-    inline int demand() const
-    {
-        return passNets.size();
-    }
-    inline int overflow() const
-    {
-        return std::max(demand() - capacity, 0);
-    }
+    Edge();
+    Edge(int capacity);
+    bool operator()(const Edge *a, const Edge *b) const;
+    int demand() const;
+    int overflow() const;
 };
 
-struct RoutingNode
+struct GridNode
 {
     int prevDirection;
     double cost;
 
-    RoutingNode() : prevDirection(-1), cost(-1) {}
-    inline void reset()
-    {
-        prevDirection = cost = -1;
-    }
+    GridNode();
+    void reset();
 };
 
-struct Node
+struct RoutingNode
 {
     int x, y;
     double cost;
 
-    Node() {}
-    Node(int x, int y, double cost) : x(x), y(y), cost(cost) {}
-    inline bool operator()(Node const &A, Node const &B) const
-    {
-        return A.cost > B.cost;
-    }
+    RoutingNode();
+    RoutingNode(int x, int y, double cost);
+    bool operator()(const RoutingNode &a, const RoutingNode &b) const;
+};
+
+struct Result
+{
+    std::string netName;
+    int netId;
+    std::vector<Point> routingPath;
+
+    Result();
+    Result(const std::string &netName, int netId, const std::vector<Point> &routingPath);
 };

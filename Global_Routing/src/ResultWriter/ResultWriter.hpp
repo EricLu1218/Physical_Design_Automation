@@ -1,12 +1,17 @@
 #pragma once
 #include "../Structure/Data.hpp"
+#include <memory>
 #include <string>
+#include <vector>
 
 class ResultWriter
 {
-    RouterInput *input;
-
 public:
-    ResultWriter(RouterInput *input) : input(input) {}
-    void write(std::string const &filename);
+    using ptr = std::unique_ptr<ResultWriter>;
+
+    std::vector<Result> results;
+
+    ResultWriter();
+    void addResult(const Net *net);
+    void write(const std::string &filename);
 };
