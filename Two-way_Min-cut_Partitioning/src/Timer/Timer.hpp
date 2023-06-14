@@ -36,30 +36,31 @@ class Timer
         }
     };
 
-    std::unordered_map<std::string, TimerComponent> tagToTimer;
     std::chrono::seconds timeLimit;
+    TimerComponent limitTimer;
+    size_t maxTagLength;
+    std::unordered_map<std::string, TimerComponent> tagToTimer;
 
 public:
     Timer(int timeLimitInSecond)
-        : timeLimit(std::chrono::seconds(timeLimitInSecond))
-    {
-        tagToTimer["_timeLimit"];
-    }
+        : timeLimit(std::chrono::seconds(timeLimitInSecond)), limitTimer(TimerComponent()), maxTagLength(0) {}
 
     bool overTime()
     {
-        tagToTimer["_timeLimit"].stop();
-        return tagToTimer["_timeLimit"].getDuration() >= timeLimit;
+        limitTimer.stop();
+        return limitTimer.getDuration() >= timeLimit;
     }
 
     void startTimer(const std::string &tag)
     {
         tagToTimer[tag].start();
+        if (maxTagLength < tag.size())
+            maxTagLength = tag.size();
     }
 
     void stopTimer(const std::string &tag)
     {
-        if (tagToTimer.count(tag) == 0)
+        if (!tagToTimer.count(tag))
         {
             std::cerr << "[Error] Cannot stop timer. Timer \"" << tag << "\" never started.\n";
             return;
@@ -69,8 +70,7 @@ public:
 
     void printTime(const std::string &tag)
     {
-
-        if (tagToTimer.count(tag) == 0)
+        if (!tagToTimer.count(tag))
         {
             std::cerr << "[Error] Cannot print time. Timer \"" << tag << "\" never started.\n";
             return;
@@ -82,6 +82,6 @@ public:
         }
 
         std::chrono::duration<double> second = tagToTimer[tag].getDuration();
-        std::cout << std::setw(15) << std::left << tag + ":" << second.count() << " s\n";
+        std::cout << std::setw(maxTagLength + 2) << std::left << tag + ":" << second.count() << " s\n";
     }
 };

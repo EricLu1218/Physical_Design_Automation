@@ -70,7 +70,6 @@ public:
 
     void printTime(const std::string &tag)
     {
-
         if (!tagToTimer.count(tag))
         {
             std::cerr << "[Error] Cannot print time. Timer \"" << tag << "\" never started.\n";
