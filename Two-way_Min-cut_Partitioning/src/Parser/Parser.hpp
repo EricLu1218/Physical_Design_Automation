@@ -1,7 +1,6 @@
 #pragma once
 #include "../Structure/Data.hpp"
 #include <string>
-#include <vector>
 
 class Parser
 {
