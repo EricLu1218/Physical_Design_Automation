@@ -13,7 +13,7 @@ void ResultWriter::addResult(const Net *net)
 void ResultWriter::write(const std::string &filename)
 {
     std::ofstream fout(filename);
-    if (!fout)
+    if (!fout.is_open())
     {
         std::cerr << "[Error] Cannot open \"" << filename << "\".\n";
         exit(EXIT_FAILURE);

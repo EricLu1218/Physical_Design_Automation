@@ -6,7 +6,7 @@
 void Parser::readInput(Input *input, const std::string &filename)
 {
     std::ifstream fin(filename);
-    if (!fin)
+    if (!fin.is_open())
     {
         std::cerr << "[Error] Cannot open \"" << filename << "\".\n";
         exit(EXIT_FAILURE);
