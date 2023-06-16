@@ -17,7 +17,7 @@ void ResultWriter::addCell(Cell *cell)
 void ResultWriter::write(std::string const &filename) const
 {
     std::ofstream fout(filename);
-    if (!fout)
+    if (!fout.is_open())
     {
         std::cerr << "[Error] Cannot open \"" << filename << "\".\n";
         exit(EXIT_FAILURE);
