@@ -13,7 +13,7 @@ inline std::string strip(std::string input, std::string chars = " \t\r\n")
 void Parser::readAux(Input *input, const std::string &filename)
 {
     std::ifstream fin(filename);
-    if (!fin)
+    if (!fin.is_open())
     {
         std::cerr << "[Error] Cannot open \"" << filename << "\".\n";
         exit(EXIT_FAILURE);
@@ -43,7 +43,7 @@ void Parser::readAux(Input *input, const std::string &filename)
 void Parser::readNode(Input *input, const std::string &filename)
 {
     std::ifstream fin(filename);
-    if (!fin)
+    if (!fin.is_open())
     {
         std::cerr << "[Error] Cannot open \"" << filename << "\".\n";
         exit(EXIT_FAILURE);
@@ -98,7 +98,7 @@ void Parser::readNode(Input *input, const std::string &filename)
 void Parser::readPl(Input *input, const std::string &filename)
 {
     std::ifstream fin(filename);
-    if (!fin)
+    if (!fin.is_open())
     {
         std::cerr << "[Error] Cannot open \"" << filename << "\".\n";
         exit(EXIT_FAILURE);
@@ -127,7 +127,7 @@ void Parser::readPl(Input *input, const std::string &filename)
 void Parser::readScl(Input *input, const std::string &filename)
 {
     std::ifstream fin(filename);
-    if (!fin)
+    if (!fin.is_open())
     {
         std::cerr << "[Error] Cannot open \"" << filename << "\".\n";
         exit(EXIT_FAILURE);
@@ -193,6 +193,8 @@ void Parser::readScl(Input *input, const std::string &filename)
         }
     }
 }
+
+Parser::Parser() {}
 
 Input::ptr Parser::parse(const std::string &filename)
 {

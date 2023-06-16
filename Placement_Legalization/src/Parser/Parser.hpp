@@ -12,6 +12,6 @@ class Parser
     void readScl(Input *input, const std::string &filename);
 
 public:
-    Parser() {}
+    Parser();
     Input::ptr parse(const std::string &filename);
 };
