@@ -3,6 +3,7 @@
 #include <cmath>
 #include <iostream>
 #include <limits>
+#include <stack>
 #include <vector>
 
 void Legalizer::divideRow()
@@ -70,9 +71,9 @@ int Legalizer::getSubRowIdx(const Row *row, const Cell *cell) const
     auto getMinDisplacement = [&](size_t idx) -> double
     {
         double displacement = 0;
-        if (cell->x + cell->width <= subRows[idx]->minX)
+        if (cell->x < subRows[idx]->minX)
             displacement = subRows[idx]->minX - cell->x;
-        else if (cell->x >= subRows[idx]->maxX)
+        else if (cell->x + cell->width > subRows[idx]->maxX)
             displacement = cell->x + cell->width - subRows[idx]->maxX;
         return displacement;
     };
@@ -95,49 +96,60 @@ int Legalizer::getSubRowIdx(const Row *row, const Cell *cell) const
     return subRowIdx;
 }
 
-int Legalizer::placeRowTrail(const Row *row, Cell *cell)
+double Legalizer::getSiteX(double x, int minX, int siteWidth) const
+{
+    double shiftX = x - minX;
+    return minX + std::round(shiftX / siteWidth) * siteWidth;
+}
+
+std::pair<int, double> Legalizer::placeRowTrial(const Row *row, Cell *cell, bool addPenalty)
 {
     int subRowIdx = getSubRowIdx(row, cell);
     if (subRowIdx == -1)
-    {
-        cell->optimalX = cell->optimalY = std::numeric_limits<double>::max();
-        return -1;
-    }
+        return {-1, std::numeric_limits<double>::max()};
 
     const auto &subRow = row->subRows[subRowIdx];
-    double optimalX = cell->x;
+    double cellX = cell->x;
     if (cell->x < subRow->minX)
-        optimalX = subRow->minX;
+        cellX = subRow->minX;
     else if (cell->x > subRow->maxX - cell->width)
-        optimalX = subRow->maxX - cell->width;
+        cellX = subRow->maxX - cell->width;
 
     auto cluster = subRow->lastCluster;
-    if (!cluster || cluster->x + cluster->width <= optimalX)
+    if (!cluster || cluster->x + cluster->width <= cellX)
     {
-        cell->optimalX = optimalX;
+        cell->optimalX = cellX;
+        cell->optimalY = row->y;
     }
     else
     {
-        int trialWeight = cluster->weight + cell->weight;
-        double trialQ = cluster->q + cell->weight * (optimalX - cluster->width);
-        int trialWidth = cluster->width + cell->width;
+        // add cell
+        int clusterWeight = cluster->weight + cell->weight;
+        double clusterQ = cluster->q + cell->weight * (cellX - cluster->width);
+        int clusterWidth = cluster->width + cell->width;
 
-        double trialX = 0;
+        std::stack<Cluster *> clusterStack;
+        double clusterX = 0;
+        // collapse cluster
         while (true)
         {
-            trialX = trialQ / trialWeight;
+            clusterX = clusterQ / clusterWeight;
 
-            if (trialX < subRow->minX)
-                trialX = subRow->minX;
-            if (trialX > subRow->maxX - trialWidth)
-                trialX = subRow->maxX - trialWidth;
+            if (clusterX < subRow->minX)
+                clusterX = subRow->minX;
+            if (clusterX > subRow->maxX - clusterWidth)
+                clusterX = subRow->maxX - clusterWidth;
+
+            clusterStack.push(cluster);
 
             const auto prevCluster = cluster->predecessor;
-            if (prevCluster && prevCluster->x + prevCluster->width > trialX)
+            if (prevCluster && prevCluster->x + prevCluster->width > clusterX)
             {
-                trialQ = prevCluster->q + trialQ - trialWeight * prevCluster->width;
-                trialWeight = prevCluster->weight + trialWeight;
-                trialWidth = prevCluster->width + trialWidth;
+                // add cluster
+                // (Update "q" then update "weight" since "weight" is used in both calculations.)
+                clusterQ = prevCluster->q + clusterQ - clusterWeight * prevCluster->width;
+                clusterWeight = prevCluster->weight + clusterWeight;
+                clusterWidth = prevCluster->width + clusterWidth;
 
                 cluster = prevCluster;
             }
@@ -146,34 +158,65 @@ int Legalizer::placeRowTrail(const Row *row, Cell *cell)
                 break;
             }
         }
-        cell->optimalX = trialX + trialWidth - cell->width;
+        cell->optimalX = clusterX + clusterWidth - cell->width;
+        cell->optimalY = row->y;
+
+        if (addPenalty)
+        {
+            // check if violates the max displacement constraint after adding a cell to the cluster
+            int x = getSiteX(clusterX, subRow->minX, row->siteWidth);
+            while (!clusterStack.empty())
+            {
+                for (auto cell : clusterStack.top()->member)
+                {
+                    double copyX = cell->optimalX;
+                    cell->optimalX = x;
+                    if (cell->displacement() > maxDisplacementConstraint)
+                    {
+                        cell->optimalX = copyX;
+                        return {-1, std::numeric_limits<double>::max()};
+                    }
+                    cell->optimalX = copyX;
+                    x += cell->width;
+                }
+                clusterStack.pop();
+            }
+        }
     }
-    cell->optimalY = row->y;
-    return subRowIdx;
+    return {subRowIdx, cell->displacement()};
 }
 
 void Legalizer::placeRowFinal(SubRow *subRow, Cell *cell)
 {
     subRow->freeWidth -= cell->width;
 
-    double optimalX = cell->x;
+    double cellX = cell->x;
     if (cell->x < subRow->minX)
-        optimalX = subRow->minX;
+        cellX = subRow->minX;
     else if (cell->x > subRow->maxX - cell->width)
-        optimalX = subRow->maxX - cell->width;
+        cellX = subRow->maxX - cell->width;
 
     auto cluster = subRow->lastCluster;
-    if (!cluster || cluster->x + cluster->width <= optimalX)
+    if (!cluster || cluster->x + cluster->width <= cellX)
     {
-        subRow->lastCluster = new Cluster(optimalX, cell, subRow->lastCluster);
+        subRow->lastCluster = new Cluster(cellX, cluster);
+        cluster = subRow->lastCluster;
+
+        // add cell
+        cluster->member.emplace_back(cell);
+        cluster->weight += cell->weight;
+        cluster->q += cell->weight * (cellX - cluster->width);
+        cluster->width += cell->width;
     }
     else
     {
+        // add cell
         cluster->member.emplace_back(cell);
         cluster->weight += cell->weight;
-        cluster->q += cell->weight * (optimalX - cluster->width);
+        cluster->q += cell->weight * (cellX - cluster->width);
         cluster->width += cell->width;
 
+        // collapse cluster
         while (true)
         {
             cluster->x = cluster->q / cluster->weight;
@@ -186,6 +229,7 @@ void Legalizer::placeRowFinal(SubRow *subRow, Cell *cell)
             auto prevCluster = cluster->predecessor;
             if (prevCluster && prevCluster->x + prevCluster->width > cluster->x)
             {
+                // add cluster
                 prevCluster->member.insert(prevCluster->member.end(), cluster->member.begin(), cluster->member.end());
                 prevCluster->weight += cluster->weight;
                 prevCluster->q += cluster->q - cluster->weight * prevCluster->width;
@@ -203,39 +247,21 @@ void Legalizer::placeRowFinal(SubRow *subRow, Cell *cell)
     }
 }
 
-double Legalizer::calCost(const Cell *cell) const
-{
-    if (cell->optimalX == std::numeric_limits<double>::max() ||
-        cell->optimalY == std::numeric_limits<double>::max())
-        return std::numeric_limits<double>::max();
-
-    double x = cell->optimalX - cell->x;
-    double y = cell->optimalY - cell->y;
-    return std::sqrt(x * x + y * y);
-}
-
 void Legalizer::determinePosition()
 {
     for (const auto &row : input->rows)
     {
-        int siteWidth = row->siteWidth;
         for (const auto &subRow : row->subRows)
         {
             auto cluster = subRow->lastCluster;
             while (cluster)
             {
-                double shiftX = cluster->x - subRow->minX;
-                if (shiftX - std::floor(shiftX / siteWidth) * siteWidth <= siteWidth / 2.0)
-                    cluster->x = std::floor(shiftX / siteWidth) * siteWidth + subRow->minX;
-                else
-                    cluster->x = std::ceil(shiftX / siteWidth) * siteWidth + subRow->minX;
-
-                int optimalX = cluster->x;
+                int x = getSiteX(cluster->x, subRow->minX, row->siteWidth);
                 for (auto cell : cluster->member)
                 {
-                    cell->optimalX = optimalX;
+                    cell->optimalX = x;
                     cell->optimalY = row->y;
-                    optimalX += cell->width;
+                    x += cell->width;
                 }
                 cluster = cluster->predecessor;
             }
@@ -250,38 +276,45 @@ void Legalizer::abacusProcess()
 
     for (const auto &cell : input->cells)
     {
-        int bestRowIdx = getRowIdx(cell.get());
-        int bestSubRowIdx = placeRowTrail(input->rows[bestRowIdx].get(), cell.get());
-        double bestCost = calCost(cell.get());
-        size_t downFinder = bestRowIdx, upFinder = bestRowIdx;
-
-        while (downFinder > 0 && std::abs(cell->y - input->rows[downFinder]->y) < bestCost)
+        bool addPenalty = true;
+        while (true)
         {
-            --downFinder;
-            int subRowIdx = placeRowTrail(input->rows[downFinder].get(), cell.get());
-            double cost = calCost(cell.get());
-            if (cost < bestCost)
-            {
-                bestRowIdx = downFinder;
-                bestSubRowIdx = subRowIdx;
-                bestCost = cost;
-            }
-        }
+            int bestRowIdx = getRowIdx(cell.get());
+            auto [bestSubRowIdx, bestCost] = placeRowTrial(input->rows[bestRowIdx].get(), cell.get(), addPenalty);
+            int downFinder = bestRowIdx - 1, upFinder = bestRowIdx + 1;
 
-        while (upFinder < input->rows.size() - 1 && std::abs(cell->y - input->rows[upFinder]->y) < bestCost)
-        {
-            ++upFinder;
-            int subRowIdx = placeRowTrail(input->rows[upFinder].get(), cell.get());
-            double cost = calCost(cell.get());
-            if (cost < bestCost)
+            while (downFinder >= 0 && std::abs(cell->y - input->rows[downFinder]->y) < bestCost)
             {
-                bestRowIdx = upFinder;
-                bestSubRowIdx = subRowIdx;
-                bestCost = cost;
+                auto [subRowIdx, cost] = placeRowTrial(input->rows[downFinder].get(), cell.get(), addPenalty);
+                if (cost < bestCost)
+                {
+                    bestRowIdx = downFinder;
+                    bestSubRowIdx = subRowIdx;
+                    bestCost = cost;
+                }
+                --downFinder;
             }
-        }
 
-        placeRowFinal(input->rows[bestRowIdx]->subRows[bestSubRowIdx].get(), cell.get());
+            while (upFinder < static_cast<int>(input->rows.size()) && std::abs(cell->y - input->rows[upFinder]->y) < bestCost)
+            {
+                auto [subRowIdx, cost] = placeRowTrial(input->rows[upFinder].get(), cell.get(), addPenalty);
+                if (cost < bestCost)
+                {
+                    bestRowIdx = upFinder;
+                    bestSubRowIdx = subRowIdx;
+                    bestCost = cost;
+                }
+                ++upFinder;
+            }
+
+            if (bestSubRowIdx == -1)
+            {
+                addPenalty = false;
+                continue;
+            }
+            placeRowFinal(input->rows[bestRowIdx]->subRows[bestSubRowIdx].get(), cell.get());
+            break;
+        }
     }
     determinePosition();
 }
@@ -291,9 +324,7 @@ std::pair<double, double> Legalizer::getTotalAndMaxDisplacement() const
     double totalDisplacement = 0, maxDisplacement = 0;
     for (const auto &cell : input->cells)
     {
-        double x = cell->optimalX - cell->x;
-        double y = cell->optimalY - cell->y;
-        double displacement = std::sqrt(x * x + y * y);
+        auto displacement = cell->displacement();
         totalDisplacement += displacement;
         if (maxDisplacement < displacement)
             maxDisplacement = displacement;
@@ -301,13 +332,14 @@ std::pair<double, double> Legalizer::getTotalAndMaxDisplacement() const
     return {totalDisplacement, maxDisplacement};
 }
 
-Legalizer::Legalizer(Input *input) : input(input)
+Legalizer::Legalizer(Input *input)
+    : input(input), maxDisplacementConstraint(input->maxDisplacementInSite * input->rows[0]->siteWidth)
 {
     std::cout << "----- DESIGN INFORMATION -----\n"
-              << "#row:               " << input->rows.size() << "\n"
-              << "#cell:              " << input->cells.size() << "\n"
-              << "#blockage:          " << input->blockages.size() << "\n"
-              << "Max displacement:   " << input->maxDisplacement * input->rows[0]->siteWidth << "\n"
+              << "#row:                        " << input->rows.size() << "\n"
+              << "#cell:                       " << input->cells.size() << "\n"
+              << "#blockage:                   " << input->blockages.size() << "\n"
+              << "Max displacement constraint: " << maxDisplacementConstraint << "\n"
               << "\n";
 }
 
@@ -317,8 +349,8 @@ ResultWriter::ptr Legalizer::solve()
     abacusProcess();
     auto [totalDisplacement, maxDisplacement] = getTotalAndMaxDisplacement();
     std::cout << "------- ABACUS RESULT --------\n"
-              << "Total displacement: " << totalDisplacement << "\n"
-              << "Max displacement:   " << maxDisplacement << "\n"
+              << "Total displacement:          " << totalDisplacement << "\n"
+              << "Max displacement:            " << maxDisplacement << "\n"
               << "\n";
 
     auto result = new ResultWriter();

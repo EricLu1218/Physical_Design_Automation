@@ -17,6 +17,7 @@ struct Cell
 
     Cell();
     Cell(const std::string &name, int width, int height);
+    double displacement() const;
 };
 
 struct Cluster
@@ -29,7 +30,7 @@ struct Cluster
     std::vector<Cell *> member;
 
     Cluster();
-    Cluster(double x, Cell *cell, Cluster *predecessor);
+    Cluster(double x, Cluster *predecessor);
 };
 
 struct SubRow
@@ -60,7 +61,7 @@ struct Input
 {
     using ptr = std::unique_ptr<Input>;
 
-    int maxDisplacement;
+    int maxDisplacementInSite;
     std::vector<Cell::ptr> cells, blockages;
     std::vector<Row::ptr> rows;
 

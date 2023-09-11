@@ -35,7 +35,7 @@ void Parser::readAux(Input *input, const std::string &filename)
         }
         else if (identifier == "MaxDisplacement")
         {
-            buffStream >> _ >> input->maxDisplacement;
+            buffStream >> _ >> input->maxDisplacementInSite;
         }
     }
 }
