@@ -16,7 +16,7 @@ double Cell::displacement() const
 Cluster::Cluster()
     : x(0), weight(0), q(0), width(0), predecessor(nullptr) {}
 
-Cluster::Cluster(double x, Cluster *predecessor)
+Cluster::Cluster(double x, Cluster::ptr predecessor)
     : x(x), weight(0), q(0), width(0), predecessor(predecessor) {}
 
 SubRow::SubRow() : minX(0), maxX(0), freeWidth(maxX - minX), lastCluster(nullptr) {}

@@ -22,15 +22,17 @@ struct Cell
 
 struct Cluster
 {
+    using ptr = std::shared_ptr<Cluster>;
+
     double x;
     int weight;
     double q;
     int width;
-    Cluster *predecessor;
+    Cluster::ptr predecessor;
     std::vector<Cell *> member;
 
     Cluster();
-    Cluster(double x, Cluster *predecessor);
+    Cluster(double x, Cluster::ptr predecessor);
 };
 
 struct SubRow
@@ -39,7 +41,7 @@ struct SubRow
 
     int minX, maxX, freeWidth;
 
-    Cluster *lastCluster;
+    Cluster::ptr lastCluster;
 
     SubRow();
     SubRow(int minX, int maxX);

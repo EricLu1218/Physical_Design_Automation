@@ -14,8 +14,8 @@ class Legalizer
     double getSiteX(double x, int minX, int siteWidth) const;
     std::pair<int, double> placeRowTrial(const Row *row, Cell *cell, bool addPenalty);
     void placeRowFinal(SubRow *subRow, Cell *cell);
-    void determinePosition();
     void abacusProcess();
+    void determinePosition();
     std::pair<double, double> getTotalAndMaxDisplacement() const;
 
 public:
