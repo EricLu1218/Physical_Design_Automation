@@ -24,14 +24,7 @@ void ResultWriter::write(const std::string &filename) const
     }
 
     fout << "Wirelength " << wirelength << "\n";
-
-    std::string name;
-    int x, y;
-    bool isRotated;
     fout << "Blocks\n";
-    for (const auto &hardblock : hardblocks)
-    {
-        std::tie(name, x, y, isRotated) = hardblock;
+    for (const auto &[name, x, y, isRotated] : hardblocks)
         fout << name << " " << x << " " << y << " " << isRotated << "\n";
-    }
 }

@@ -17,7 +17,7 @@ $(EXEC): $(OBJS)
 	$(CXX) $(LIBS) -o $@ $^
 
 %.o: %.cpp
-	$(CXX) $(CXXFLAGS) -c $< -o $@
+	$(CXX) $(CXXFLAGS) -o $@ -c $<
 
 clean:
 	rm -rf $(EXEC) $(OBJS) $(DEPS)

@@ -12,7 +12,7 @@ Hardblock::Hardblock()
 Hardblock::Hardblock(const std::string &name, int width, int height)
     : name(name), width(width), height(height), x(0), y(0), isRotated(false), pin(new Pin(name, x, y)) {}
 
-void Hardblock::update(int width_, int height_, int x_, int const y_)
+void Hardblock::update(int width_, int height_, int x_, int y_)
 {
     x = x_;
     y = y_;
