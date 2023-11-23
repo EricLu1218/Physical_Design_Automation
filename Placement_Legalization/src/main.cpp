@@ -14,7 +14,7 @@ int main(int argc, char *argv[])
     timer.startTimer("parse input");
 
     Parser parser;
-    auto input = parser.parse(argParser.auxFile);
+    auto input = parser.parse(argParser.auxFilepath);
 
     timer.stopTimer("parse input");
     timer.startTimer("abacus process");
@@ -25,7 +25,7 @@ int main(int argc, char *argv[])
     timer.stopTimer("abacus process");
     timer.startTimer("write output");
 
-    result->write(argParser.outputFile);
+    result->write(argParser.outputFilepath);
 
     timer.stopTimer("write output");
     timer.stopTimer("runtime");

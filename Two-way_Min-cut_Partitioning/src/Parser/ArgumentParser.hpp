@@ -6,7 +6,7 @@
 class ArgumentParser
 {
 public:
-    std::string netFile, cellFile, outputFile;
+    std::string netFilepath, cellFilepath, outputFilepath;
 
     ArgumentParser() {}
 
@@ -29,9 +29,9 @@ public:
             std::cerr << "Usage: " << argv[0] << " <net file> <cell file> <output file>\n";
             return false;
         }
-        netFile = argv[optind];
-        cellFile = argv[optind + 1];
-        outputFile = argv[optind + 2];
+        netFilepath = argv[optind];
+        cellFilepath = argv[optind + 1];
+        outputFilepath = argv[optind + 2];
         return true;
     }
 };

@@ -14,12 +14,12 @@ void ResultWriter::addCell(Cell *cell)
     groups[cell->groupIdx].emplace_back(cell->name);
 }
 
-void ResultWriter::write(std::string const &filename) const
+void ResultWriter::write(std::string const &filepath) const
 {
-    std::ofstream fout(filename);
+    std::ofstream fout(filepath);
     if (!fout.is_open())
     {
-        std::cerr << "[Error] Cannot open \"" << filename << "\".\n";
+        std::cerr << "[Error] Cannot open \"" << filepath << "\".\n";
         exit(EXIT_FAILURE);
     }
 

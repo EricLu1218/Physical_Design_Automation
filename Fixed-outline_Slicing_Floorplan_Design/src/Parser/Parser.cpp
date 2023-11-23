@@ -14,12 +14,12 @@ inline std::string strip(std::string input, std::string chars = " \t\r\n")
 
 std::unordered_map<std::string, Pin *> strToPin;
 
-void Parser::readHardblock(Input *input, const std::string &filename)
+void Parser::readHardblock(Input *input, const std::string &filepath)
 {
-    std::ifstream fin(filename);
+    std::ifstream fin(filepath);
     if (!fin.is_open())
     {
-        std::cerr << "[Error] Cannot open \"" << filename << "\".\n";
+        std::cerr << "[Error] Cannot open \"" << filepath << "\".\n";
         exit(EXIT_FAILURE);
     }
 
@@ -50,12 +50,12 @@ void Parser::readHardblock(Input *input, const std::string &filename)
     }
 }
 
-void Parser::readPl(Input *input, const std::string &filename)
+void Parser::readPl(Input *input, const std::string &filepath)
 {
-    std::ifstream fin(filename);
+    std::ifstream fin(filepath);
     if (!fin.is_open())
     {
-        std::cerr << "[Error] Cannot open \"" << filename << "\".\n";
+        std::cerr << "[Error] Cannot open \"" << filepath << "\".\n";
         exit(EXIT_FAILURE);
     }
 
@@ -69,12 +69,12 @@ void Parser::readPl(Input *input, const std::string &filename)
     }
 }
 
-void Parser::readNet(Input *input, const std::string &filename)
+void Parser::readNet(Input *input, const std::string &filepath)
 {
-    std::ifstream fin(filename);
+    std::ifstream fin(filepath);
     if (!fin.is_open())
     {
-        std::cerr << "[Error] Cannot open \"" << filename << "\".\n";
+        std::cerr << "[Error] Cannot open \"" << filepath << "\".\n";
         exit(EXIT_FAILURE);
     }
 
@@ -100,13 +100,13 @@ void Parser::readNet(Input *input, const std::string &filename)
 
 Parser::Parser() {}
 
-Input::ptr Parser::parse(const std::string &hardblockFile, const std::string &plFile,
-                         const std::string &netFile, double deadspaceRatio)
+Input::ptr Parser::parse(const std::string &hardblockFilepath, const std::string &plFilepath,
+                         const std::string &netFilepath, double deadspaceRatio)
 {
     auto input = new Input();
-    readHardblock(input, hardblockFile);
-    readPl(input, plFile);
-    readNet(input, netFile);
+    readHardblock(input, hardblockFilepath);
+    readPl(input, plFilepath);
+    readNet(input, netFilepath);
     input->deadspaceRatio = deadspaceRatio;
     return std::unique_ptr<Input>(input);
 }

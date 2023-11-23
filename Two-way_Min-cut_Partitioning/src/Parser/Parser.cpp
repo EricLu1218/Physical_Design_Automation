@@ -5,12 +5,12 @@
 
 std::unordered_map<std::string, Cell *> strToCell;
 
-void Parser::readCell(Input *input, const std::string &filename)
+void Parser::readCell(Input *input, const std::string &filepath)
 {
-    std::ifstream fin(filename);
+    std::ifstream fin(filepath);
     if (!fin.is_open())
     {
-        std::cerr << "[Error] Cannot open \"" << filename << "\".\n";
+        std::cerr << "[Error] Cannot open \"" << filepath << "\".\n";
         exit(EXIT_FAILURE);
     }
 
@@ -24,12 +24,12 @@ void Parser::readCell(Input *input, const std::string &filename)
     };
 }
 
-void Parser::readNet(Input *input, const std::string &filename)
+void Parser::readNet(Input *input, const std::string &filepath)
 {
-    std::ifstream fin(filename);
+    std::ifstream fin(filepath);
     if (!fin.is_open())
     {
-        std::cerr << "[Error] Cannot open \"" << filename << "\".\n";
+        std::cerr << "[Error] Cannot open \"" << filepath << "\".\n";
         exit(EXIT_FAILURE);
     }
 
@@ -49,11 +49,11 @@ void Parser::readNet(Input *input, const std::string &filename)
 
 Parser::Parser() {}
 
-Input::ptr Parser::parse(const std::string &cellFile, const std::string &netFile)
+Input::ptr Parser::parse(const std::string &cellFilepath, const std::string &netFilepath)
 {
     auto input = new Input();
-    readCell(input, cellFile);
-    readNet(input, netFile);
+    readCell(input, cellFilepath);
+    readNet(input, netFilepath);
     int totalSize = 0;
     for (const auto &cell : input->cells)
         totalSize += cell->size;

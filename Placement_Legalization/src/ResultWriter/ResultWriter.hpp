@@ -15,5 +15,5 @@ public:
     ResultWriter();
     void addCell(const Cell *cell);
     void addBlockage(const Cell *blockage);
-    void write(const std::string &filename) const;
+    void write(const std::string &filepath) const;
 };

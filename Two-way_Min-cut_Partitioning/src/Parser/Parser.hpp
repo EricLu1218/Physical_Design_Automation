@@ -4,10 +4,10 @@
 
 class Parser
 {
-    void readCell(Input *input, const std::string &filename);
-    void readNet(Input *input, const std::string &filename);
+    void readCell(Input *input, const std::string &filepath);
+    void readNet(Input *input, const std::string &filepath);
 
 public:
     Parser();
-    Input::ptr parse(const std::string &cellFile, const std::string &netFile);
+    Input::ptr parse(const std::string &cellFilepath, const std::string &netFilepath);
 };

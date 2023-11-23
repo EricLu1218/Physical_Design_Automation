@@ -6,7 +6,7 @@
 class ArgumentParser
 {
 public:
-    std::string hardblockFile, netFile, plFile, floorplanFile;
+    std::string hardblockFilepath, netFilepath, plFilepath, floorplanFilepath;
     double deadspaceRatio;
 
     ArgumentParser() : deadspaceRatio(0) {}
@@ -30,10 +30,10 @@ public:
             std::cerr << "Usage: " << argv[0] << " <hardblock file> <net file> <pl file> <floorplan file> <deadspace ratio>\n";
             return false;
         }
-        hardblockFile = argv[optind];
-        netFile = argv[optind + 1];
-        plFile = argv[optind + 2];
-        floorplanFile = argv[optind + 3];
+        hardblockFilepath = argv[optind];
+        netFilepath = argv[optind + 1];
+        plFilepath = argv[optind + 2];
+        floorplanFilepath = argv[optind + 3];
         deadspaceRatio = std::stod(argv[optind + 4]);
         return true;
     }

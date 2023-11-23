@@ -6,7 +6,7 @@
 class ArgumentParser
 {
 public:
-    std::string auxFile, outputFile;
+    std::string auxFilepath, outputFilepath;
 
     ArgumentParser() {}
 
@@ -18,7 +18,7 @@ public:
             switch (opt)
             {
             case 'o':
-                outputFile = optarg;
+                outputFilepath = optarg;
                 break;
 
             default:
@@ -33,14 +33,14 @@ public:
             std::cerr << "Usage: " << argv[0] << " [-o output_file] <aux file>\n";
             return false;
         }
-        auxFile = argv[optind];
+        auxFilepath = argv[optind];
 
-        if (outputFile.empty())
+        if (outputFilepath.empty())
         {
-            size_t begin = auxFile.find_last_of('/') + 1;
-            size_t end = auxFile.find_last_of('.');
-            std::string filename = auxFile.substr(begin, end - begin);
-            outputFile = "../output/" + filename + ".result";
+            size_t begin = auxFilepath.find_last_of('/') + 1;
+            size_t end = auxFilepath.find_last_of('.');
+            std::string filename = auxFilepath.substr(begin, end - begin);
+            outputFilepath = "../output/" + filename + ".result";
         }
         return true;
     }

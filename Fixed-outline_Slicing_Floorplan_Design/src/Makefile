@@ -14,10 +14,10 @@ DEPS     := $(OBJS:.o=.d)
 all: $(EXEC)
 
 $(EXEC): $(OBJS)
-	$(CXX) $(LIBS) -o $@ $^
+	$(CXX) -o $@ $^ $(LIBS)
 
 %.o: %.cpp
-	$(CXX) $(CXXFLAGS) -o $@ -c $<
+	$(CXX) $(CXXFLAGS) -c $< -o $@
 
 clean:
 	rm -rf $(EXEC) $(OBJS) $(DEPS)

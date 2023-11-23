@@ -10,12 +10,12 @@ inline std::string strip(std::string input, std::string chars = " \t\r\n")
     return input;
 }
 
-void Parser::readAux(Input *input, const std::string &filename)
+void Parser::readAux(Input *input, const std::string &filepath)
 {
-    std::ifstream fin(filename);
+    std::ifstream fin(filepath);
     if (!fin.is_open())
     {
-        std::cerr << "[Error] Cannot open \"" << filename << "\".\n";
+        std::cerr << "[Error] Cannot open \"" << filepath << "\".\n";
         exit(EXIT_FAILURE);
     }
 
@@ -31,7 +31,7 @@ void Parser::readAux(Input *input, const std::string &filename)
         buffStream >> identifier;
         if (identifier == "RowBasedPlacement")
         {
-            buffStream >> _ >> nodeFile >> plFile >> sclFile;
+            buffStream >> _ >> nodeFilename >> plFilename >> sclFilename;
         }
         else if (identifier == "MaxDisplacement")
         {
@@ -40,12 +40,12 @@ void Parser::readAux(Input *input, const std::string &filename)
     }
 }
 
-void Parser::readNode(Input *input, const std::string &filename)
+void Parser::readNode(Input *input, const std::string &filepath)
 {
-    std::ifstream fin(filename);
+    std::ifstream fin(filepath);
     if (!fin.is_open())
     {
-        std::cerr << "[Error] Cannot open \"" << filename << "\".\n";
+        std::cerr << "[Error] Cannot open \"" << filepath << "\".\n";
         exit(EXIT_FAILURE);
     }
 
@@ -95,12 +95,12 @@ void Parser::readNode(Input *input, const std::string &filename)
     }
 }
 
-void Parser::readPl(Input *input, const std::string &filename)
+void Parser::readPl(Input *input, const std::string &filepath)
 {
-    std::ifstream fin(filename);
+    std::ifstream fin(filepath);
     if (!fin.is_open())
     {
-        std::cerr << "[Error] Cannot open \"" << filename << "\".\n";
+        std::cerr << "[Error] Cannot open \"" << filepath << "\".\n";
         exit(EXIT_FAILURE);
     }
 
@@ -124,12 +124,12 @@ void Parser::readPl(Input *input, const std::string &filename)
     }
 }
 
-void Parser::readScl(Input *input, const std::string &filename)
+void Parser::readScl(Input *input, const std::string &filepath)
 {
-    std::ifstream fin(filename);
+    std::ifstream fin(filepath);
     if (!fin.is_open())
     {
-        std::cerr << "[Error] Cannot open \"" << filename << "\".\n";
+        std::cerr << "[Error] Cannot open \"" << filepath << "\".\n";
         exit(EXIT_FAILURE);
     }
 
@@ -196,14 +196,14 @@ void Parser::readScl(Input *input, const std::string &filename)
 
 Parser::Parser() {}
 
-Input::ptr Parser::parse(const std::string &filename)
+Input::ptr Parser::parse(const std::string &filepath)
 {
     auto input = new Input();
-    readAux(input, filename);
+    readAux(input, filepath);
 
-    std::string filepath = filename.substr(0, filename.find_last_of('/')) + "/";
-    readNode(input, filepath + nodeFile);
-    readPl(input, filepath + plFile);
-    readScl(input, filepath + sclFile);
+    std::string dir = filepath.substr(0, filepath.find_last_of('/')) + "/";
+    readNode(input, dir + nodeFilename);
+    readPl(input, dir + plFilename);
+    readScl(input, dir + sclFilename);
     return std::unique_ptr<Input>(input);
 }

@@ -4,14 +4,14 @@
 
 class Parser
 {
-    std::string nodeFile, plFile, sclFile;
+    std::string nodeFilename, plFilename, sclFilename;
 
-    void readAux(Input *input, const std::string &filename);
-    void readNode(Input *input, const std::string &filename);
-    void readPl(Input *input, const std::string &filename);
-    void readScl(Input *input, const std::string &filename);
+    void readAux(Input *input, const std::string &filepath);
+    void readNode(Input *input, const std::string &filepath);
+    void readPl(Input *input, const std::string &filepath);
+    void readScl(Input *input, const std::string &filepath);
 
 public:
     Parser();
-    Input::ptr parse(const std::string &filename);
+    Input::ptr parse(const std::string &filepath);
 };

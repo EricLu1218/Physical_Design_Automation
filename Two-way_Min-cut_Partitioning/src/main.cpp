@@ -14,7 +14,7 @@ int main(int argc, char *argv[])
     timer.startTimer("parse input");
 
     Parser parser;
-    auto input = parser.parse(argParser.cellFile, argParser.netFile);
+    auto input = parser.parse(argParser.cellFilepath, argParser.netFilepath);
 
     timer.stopTimer("parse input");
     timer.startTimer("FM process");
@@ -25,7 +25,7 @@ int main(int argc, char *argv[])
     timer.stopTimer("FM process");
     timer.startTimer("write output");
 
-    result->write(argParser.outputFile);
+    result->write(argParser.outputFilepath);
 
     timer.stopTimer("write output");
     timer.stopTimer("runtime");

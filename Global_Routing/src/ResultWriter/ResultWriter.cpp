@@ -10,12 +10,12 @@ void ResultWriter::addResult(const Net *net)
     results.emplace_back(net->name, net->id, net->routingPath);
 }
 
-void ResultWriter::write(const std::string &filename)
+void ResultWriter::write(const std::string &filepath)
 {
-    std::ofstream fout(filename);
+    std::ofstream fout(filepath);
     if (!fout.is_open())
     {
-        std::cerr << "[Error] Cannot open \"" << filename << "\".\n";
+        std::cerr << "[Error] Cannot open \"" << filepath << "\".\n";
         exit(EXIT_FAILURE);
     }
 

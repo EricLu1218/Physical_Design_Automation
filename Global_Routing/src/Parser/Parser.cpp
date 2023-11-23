@@ -3,12 +3,12 @@
 #include <iostream>
 #include <sstream>
 
-void Parser::readInput(Input *input, const std::string &filename)
+void Parser::readInput(Input *input, const std::string &filepath)
 {
-    std::ifstream fin(filename);
+    std::ifstream fin(filepath);
     if (!fin.is_open())
     {
-        std::cerr << "[Error] Cannot open \"" << filename << "\".\n";
+        std::cerr << "[Error] Cannot open \"" << filepath << "\".\n";
         exit(EXIT_FAILURE);
     }
 
@@ -45,9 +45,9 @@ void Parser::readInput(Input *input, const std::string &filename)
 
 Parser::Parser() {}
 
-Input::ptr Parser::parse(const std::string &filename)
+Input::ptr Parser::parse(const std::string &filepath)
 {
     auto input = new Input();
-    readInput(input, filename);
+    readInput(input, filepath);
     return std::unique_ptr<Input>(input);
 }

@@ -15,5 +15,5 @@ public:
     ResultWriter();
     void setCutsize(int cutsize_);
     void addCell(Cell *cell);
-    void write(const std::string &filename) const;
+    void write(const std::string &filepath) const;
 };

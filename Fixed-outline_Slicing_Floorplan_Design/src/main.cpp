@@ -14,8 +14,8 @@ int main(int argc, char *argv[])
     timer.startTimer("parse input");
 
     Parser parser;
-    auto input = parser.parse(argParser.hardblockFile, argParser.plFile,
-                              argParser.netFile, argParser.deadspaceRatio);
+    auto input = parser.parse(argParser.hardblockFilepath, argParser.plFilepath,
+                              argParser.netFilepath, argParser.deadspaceRatio);
 
     timer.stopTimer("parse input");
     timer.startTimer("SA process");
@@ -26,7 +26,7 @@ int main(int argc, char *argv[])
     timer.stopTimer("SA process");
     timer.startTimer("write output");
 
-    result->write(argParser.floorplanFile);
+    result->write(argParser.floorplanFilepath);
 
     timer.stopTimer("write output");
     timer.stopTimer("runtime");

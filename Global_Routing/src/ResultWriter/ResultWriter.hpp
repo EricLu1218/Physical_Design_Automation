@@ -13,5 +13,5 @@ public:
 
     ResultWriter();
     void addResult(const Net *net);
-    void write(const std::string &filename);
+    void write(const std::string &filepath);
 };
