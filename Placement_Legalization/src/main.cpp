@@ -14,13 +14,13 @@ int main(int argc, char *argv[])
     timer.startTimer("parse input");
 
     Parser parser;
-    auto input = parser.parse(argParser.auxFilepath);
+    Input::ptr input = parser.parse(argParser.auxFilepath);
 
     timer.stopTimer("parse input");
     timer.startTimer("abacus process");
 
     Legalizer legalizer(input.get());
-    auto result = legalizer.solve();
+    ResultWriter::ptr result = legalizer.solve();
 
     timer.stopTimer("abacus process");
     timer.startTimer("write output");

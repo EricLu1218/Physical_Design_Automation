@@ -86,7 +86,7 @@ void Parser::readNode(Input *input, const std::string &filepath)
         std::string name;
         int width = 0, height = 0;
         buffStream >> name >> width >> height;
-        auto cell = new Cell(name, width, height);
+        Cell *cell = new Cell(name, width, height);
         if (input->cells.size() < cellNum)
             input->cells.emplace_back(cell);
         else
@@ -185,7 +185,7 @@ void Parser::readScl(Input *input, const std::string &filepath)
             }
             else if (identifier == "End")
             {
-                auto row = new Row(y, height, siteWidth);
+                Row *row = new Row(y, height, siteWidth);
                 row->subRows.emplace_back(new SubRow(x, x + siteWidth * siteNum));
                 input->rows.emplace_back(row);
                 break;
@@ -198,7 +198,7 @@ Parser::Parser() {}
 
 Input::ptr Parser::parse(const std::string &filepath)
 {
-    auto input = new Input();
+    Input *input = new Input();
     readAux(input, filepath);
 
     std::string dir = filepath.substr(0, filepath.find_last_of('/')) + "/";

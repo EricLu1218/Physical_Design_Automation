@@ -128,7 +128,7 @@ Node *Solver::buildSlicingTree(const std::vector<int> &expression)
 {
     size_t cutIdx = 0;
     std::stack<Node *> nodeStack;
-    for (auto id : expression)
+    for (int id : expression)
     {
         if (!isCut(id))
         {
@@ -136,7 +136,7 @@ Node *Solver::buildSlicingTree(const std::vector<int> &expression)
         }
         else
         {
-            auto &cutNode = cutNodes[cutIdx++];
+            Node::ptr &cutNode = cutNodes[cutIdx++];
             cutNode->type = id;
             cutNode->rchild = nodeStack.top();
             nodeStack.pop();
@@ -151,7 +151,7 @@ Node *Solver::buildSlicingTree(const std::vector<int> &expression)
 
 void Solver::setPosition(Node *node, size_t choice, int x, int y)
 {
-    const auto &record = node->records[choice];
+    const Node::Record &record = node->records[choice];
     if (node->type == Node::HARDBLOCK)
     {
         node->hardblock->update(record.width, record.height, x, y);
@@ -169,13 +169,13 @@ void Solver::setPosition(Node *node, size_t choice, int x, int y)
 
 int Solver::getCost(const std::vector<int> &expression, bool withWirelength)
 {
-    auto root = buildSlicingTree(expression);
+    Node *root = buildSlicingTree(expression);
     int minAreaCost = std::numeric_limits<int>::max();
     size_t choice = 0;
     for (size_t i = 0; i < root->records.size(); ++i)
     {
         int areaCost = 0;
-        auto &record = root->records[i];
+        Node::Record &record = root->records[i];
         if (record.width > outline && record.height > outline)
             areaCost = record.width * record.height - outline * outline;
         else if (record.width > outline)
@@ -194,7 +194,7 @@ int Solver::getCost(const std::vector<int> &expression, bool withWirelength)
     if (withWirelength)
     {
         setPosition(root, choice, 0, 0);
-        for (const auto &net : input->nets)
+        for (const Net::ptr &net : input->nets)
             wirelength += net->wirelength();
     }
     return minAreaCost * 10 + wirelength;
@@ -202,11 +202,11 @@ int Solver::getCost(const std::vector<int> &expression, bool withWirelength)
 
 int Solver::getWirelength(const std::vector<int> &expression)
 {
-    auto root = buildSlicingTree(expression);
+    Node *root = buildSlicingTree(expression);
     size_t choice = 0;
     for (size_t i = 0; i < root->records.size(); ++i)
     {
-        auto &record = root->records[i];
+        const Node::Record &record = root->records[i];
         if (record.width <= outline && record.height <= outline)
         {
             choice = i;
@@ -216,7 +216,7 @@ int Solver::getWirelength(const std::vector<int> &expression)
 
     setPosition(root, choice, 0, 0);
     int wirelength = 0;
-    for (const auto &net : input->nets)
+    for (const Net::ptr &net : input->nets)
         wirelength += net->wirelength();
     return wirelength;
 }
@@ -245,7 +245,7 @@ std::pair<std::vector<int>, int> Solver::simulatedAnnealing(std::vector<int> exp
                 return {bestExpression, bestCost};
 
             int type = (withWirelength) ? 0 : rand() % 3;
-            auto newExpression = perturb(expression, type);
+            std::vector<int> newExpression = perturb(expression, type);
 
             ++tryingCnt;
             int newCost = getCost(newExpression, withWirelength);
@@ -280,7 +280,7 @@ Solver::Solver(Input *input, Timer &timer) : input(input), timer(timer)
     int totalArea = 0;
     for (size_t i = 0; i < input->hardblocks.size(); ++i)
     {
-        const auto &hardblock = input->hardblocks[i];
+        const Hardblock::ptr &hardblock = input->hardblocks[i];
         hardblockNodes.emplace_back(new Node(Node::HARDBLOCK, hardblock.get()));
         totalArea += hardblock->width * hardblock->height;
     }
@@ -303,7 +303,7 @@ ResultWriter::ptr Solver::solve()
     int seed = 0;
     srand(seed);
 
-    auto expression = getInitialExpression();
+    std::vector<int> expression = getInitialExpression();
     int cost = getCost(expression, false);
     std::cout << "-------- SA FOR AREA --------\n";
     while (cost != 0)
@@ -320,9 +320,9 @@ ResultWriter::ptr Solver::solve()
               << "Wirelength: " << wirelength << "\n"
               << "\n";
 
-    auto result = new ResultWriter();
+    ResultWriter *result = new ResultWriter();
     result->assignWirelength(wirelength);
-    for (const auto &hardblock : input->hardblocks)
+    for (const Hardblock::ptr &hardblock : input->hardblocks)
         result->addHardblock(hardblock.get());
     return std::unique_ptr<ResultWriter>(result);
 }

@@ -14,13 +14,13 @@ int main(int argc, char *argv[])
     timer.startTimer("parse input");
 
     Parser parser;
-    auto input = parser.parse(argParser.inputFilepath);
+    Input::ptr input = parser.parse(argParser.inputFilepath);
 
     timer.stopTimer("parse input");
     timer.startTimer("routing process");
 
     Router router(input.get(), timer);
-    auto result = router.solve();
+    ResultWriter::ptr result = router.solve();
 
     timer.stopTimer("routing process");
     timer.startTimer("write output");

@@ -14,13 +14,13 @@ int main(int argc, char *argv[])
     timer.startTimer("parse input");
 
     Parser parser;
-    auto input = parser.parse(argParser.cellFilepath, argParser.netFilepath);
+    Input::ptr input = parser.parse(argParser.cellFilepath, argParser.netFilepath);
 
     timer.stopTimer("parse input");
     timer.startTimer("FM process");
 
     Partitioner partitioner(input.get());
-    auto result = partitioner.solve();
+    ResultWriter::ptr result = partitioner.solve();
 
     timer.stopTimer("FM process");
     timer.startTimer("write output");

@@ -26,10 +26,10 @@ void ResultWriter::write(std::string const &filepath) const
     fout << "cut_size " << cutSize << "\n";
 
     fout << "A " << groups[0].size() << "\n";
-    for (const auto &cellName : groups[0])
+    for (const std::string &cellName : groups[0])
         fout << cellName << "\n";
 
     fout << "B " << groups[1].size() << "\n";
-    for (const auto &cellName : groups[1])
+    for (const std::string &cellName : groups[1])
         fout << cellName << "\n";
 }

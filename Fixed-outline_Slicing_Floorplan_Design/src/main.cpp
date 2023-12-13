@@ -14,14 +14,14 @@ int main(int argc, char *argv[])
     timer.startTimer("parse input");
 
     Parser parser;
-    auto input = parser.parse(argParser.hardblockFilepath, argParser.plFilepath,
-                              argParser.netFilepath, argParser.deadspaceRatio);
+    Input::ptr input = parser.parse(argParser.hardblockFilepath, argParser.plFilepath,
+                                    argParser.netFilepath, argParser.deadspaceRatio);
 
     timer.stopTimer("parse input");
     timer.startTimer("SA process");
 
     Solver solver(input.get(), timer);
-    auto result = solver.solve();
+    ResultWriter::ptr result = solver.solve();
 
     timer.stopTimer("SA process");
     timer.startTimer("write output");

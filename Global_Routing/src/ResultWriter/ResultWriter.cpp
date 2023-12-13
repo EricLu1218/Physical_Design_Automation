@@ -19,9 +19,9 @@ void ResultWriter::write(const std::string &filepath)
         exit(EXIT_FAILURE);
     }
 
-    std::sort(results.begin(), results.end(), [](const Result &a, const Result &b)
+    std::sort(results.begin(), results.end(), [](const Result &a, const Result &b) -> bool
               { return a.netId <= b.netId; });
-    for (const auto &result : results)
+    for (const Result &result : results)
     {
         if (result.routingPath.empty())
             continue;
@@ -29,8 +29,8 @@ void ResultWriter::write(const std::string &filepath)
         fout << result.netName << " " << result.netId << "\n";
         for (size_t i = 1; i < result.routingPath.size(); ++i)
         {
-            const auto &point1 = result.routingPath[i - 1];
-            const auto &point2 = result.routingPath[i];
+            const Point &point1 = result.routingPath[i - 1];
+            const Point &point2 = result.routingPath[i];
             fout << "(" << point1.x << ", " << point1.y << ", 1)-(" << point2.x << ", " << point2.y << ", 1)\n";
         }
         fout << "!\n";

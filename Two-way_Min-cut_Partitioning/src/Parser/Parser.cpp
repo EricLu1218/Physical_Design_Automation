@@ -18,7 +18,7 @@ void Parser::readCell(Input *input, const std::string &filepath)
     int size = 0;
     while (fin >> name >> size)
     {
-        auto cell = new Cell(name, size);
+        Cell *cell = new Cell(name, size);
         input->cells.emplace_back(cell);
         strToCell.emplace(name, cell);
     };
@@ -36,11 +36,11 @@ void Parser::readNet(Input *input, const std::string &filepath)
     std::string name, _;
     while (fin >> _ >> name >> _)
     {
-        auto net = new Net(name);
+        Net *net = new Net(name);
         input->nets.emplace_back(net);
         while (fin >> name && name[0] != '}')
         {
-            auto cell = strToCell[name];
+            Cell *cell = strToCell[name];
             net->cells.emplace_back(cell);
             cell->nets.emplace_back(net);
         }
@@ -51,11 +51,11 @@ Parser::Parser() {}
 
 Input::ptr Parser::parse(const std::string &cellFilepath, const std::string &netFilepath)
 {
-    auto input = new Input();
+    Input *input = new Input();
     readCell(input, cellFilepath);
     readNet(input, netFilepath);
     int totalSize = 0;
-    for (const auto &cell : input->cells)
+    for (const Cell::ptr &cell : input->cells)
         totalSize += cell->size;
     input->maxDiffSize = static_cast<double>(totalSize) / 10;
     return std::unique_ptr<Input>(input);

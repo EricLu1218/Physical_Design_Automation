@@ -14,7 +14,7 @@ Net::Net(const std::string &name) : name(name), numCellInGroup(2, 0) {}
 void Net::updateNumCellInGroup()
 {
     numCellInGroup[0] = numCellInGroup[1] = 0;
-    for (const auto cell : cells)
+    for (const Cell *cell : cells)
         ++numCellInGroup[cell->groupIdx];
 }
 
@@ -33,7 +33,7 @@ void Group::initBucketList()
 void Group::insertNode(Cell *cell)
 {
     ++numCellInBucketList;
-    auto head = &bucketList[cell->gain];
+    Node *head = &bucketList[cell->gain];
     cell->prev = head;
     cell->next = head->next;
     if (head->next)

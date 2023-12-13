@@ -47,7 +47,7 @@ Parser::Parser() {}
 
 Input::ptr Parser::parse(const std::string &filepath)
 {
-    auto input = new Input();
+    Input *input = new Input();
     readInput(input, filepath);
     return std::unique_ptr<Input>(input);
 }

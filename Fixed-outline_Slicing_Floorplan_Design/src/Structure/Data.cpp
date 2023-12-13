@@ -27,7 +27,7 @@ int Net::wirelength() const
 {
     int minX = std::numeric_limits<int>::max(), minY = std::numeric_limits<int>::max();
     int maxX = std::numeric_limits<int>::min(), maxY = std::numeric_limits<int>::min();
-    for (const auto pin : pins)
+    for (const Pin *pin : pins)
     {
         if (minX > pin->x)
             minX = pin->x;
@@ -64,7 +64,7 @@ void Node::updateRecord()
     records.clear();
     if (type == HORIZONTAL_CUT)
     {
-        auto cmp = [](const Record &a, const Record &b)
+        auto cmp = [](const Record &a, const Record &b) -> bool
         {
             return a.width <= b.width;
         };
@@ -74,8 +74,8 @@ void Node::updateRecord()
         int l = lchild->records.size() - 1, r = rchild->records.size() - 1;
         while (l >= 0 && r >= 0)
         {
-            const auto &left = lchild->records[l];
-            const auto &right = rchild->records[r];
+            const Node::Record &left = lchild->records[l];
+            const Node::Record &right = rchild->records[r];
             records.emplace_back(std::max(left.width, right.width), left.height + right.height, l, r);
             if (left.width >= right.width)
                 --l;
@@ -85,7 +85,7 @@ void Node::updateRecord()
     }
     else if (type == VERTICAL_CUT)
     {
-        auto cmp = [](const Record &a, const Record &b)
+        auto cmp = [](const Record &a, const Record &b) -> bool
         {
             return a.height >= b.height;
         };
@@ -95,8 +95,8 @@ void Node::updateRecord()
         size_t l = 0, r = 0;
         while (l < lchild->records.size() && r < rchild->records.size())
         {
-            const auto &left = lchild->records[l];
-            const auto &right = rchild->records[r];
+            const Node::Record &left = lchild->records[l];
+            const Node::Record &right = rchild->records[r];
             records.emplace_back(left.width + right.width, std::max(left.height, right.height), l, r);
             if (left.height >= right.height)
                 ++l;

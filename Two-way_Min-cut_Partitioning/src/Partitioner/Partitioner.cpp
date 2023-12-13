@@ -10,7 +10,7 @@ void Partitioner::generateInitialPartition()
     // can set the random seed for different testcases
     int seed = 0;
     std::shuffle(input->cells.begin(), input->cells.end(), std::default_random_engine(seed));
-    for (auto &cell : input->cells)
+    for (Cell::ptr &cell : input->cells)
     {
         int groupIdx = (groups[0].size < groups[1].size) ? 0 : 1;
         cell->groupIdx = groupIdx;
@@ -20,11 +20,11 @@ void Partitioner::generateInitialPartition()
 
 int Partitioner::getCutSize() const
 {
-    for (auto &net : input->nets)
+    for (Net::ptr &net : input->nets)
         net->updateNumCellInGroup();
 
     int cutSize = 0;
-    for (const auto &net : input->nets)
+    for (const Net::ptr &net : input->nets)
         if (net->numCellInGroup[0] > 0 && net->numCellInGroup[1] > 0)
             ++cutSize;
     return cutSize;
@@ -32,14 +32,14 @@ int Partitioner::getCutSize() const
 
 void Partitioner::updateAllCellGain()
 {
-    for (auto &net : input->nets)
+    for (Net::ptr &net : input->nets)
         net->updateNumCellInGroup();
 
-    for (auto &cell : input->cells)
+    for (Cell::ptr &cell : input->cells)
     {
         cell->lock = false;
         cell->gain = 0;
-        for (const auto net : cell->nets)
+        for (const Net *net : cell->nets)
         {
             if (net->numCellInGroup[cell->groupIdx] == 1)
                 ++cell->gain;
@@ -54,7 +54,7 @@ void Partitioner::bulidBucketList()
     groups[0].initBucketList();
     groups[1].initBucketList();
 
-    for (const auto &cell : input->cells)
+    for (const Cell::ptr &cell : input->cells)
         groups[cell->groupIdx].insertNode(cell.get());
 }
 
@@ -68,11 +68,11 @@ void Partitioner::updateGain(Cell *baseCell)
     groups[to].size += baseCell->size;
 
     groups[from].removeNode(baseCell);
-    for (auto net : baseCell->nets)
+    for (Net *net : baseCell->nets)
     {
         if (net->numCellInGroup[to] == 0)
         {
-            for (auto cell : net->cells)
+            for (Cell *cell : net->cells)
             {
                 if (!cell->lock)
                 {
@@ -83,7 +83,7 @@ void Partitioner::updateGain(Cell *baseCell)
         }
         else if (net->numCellInGroup[to] == 1)
         {
-            for (auto cell : net->cells)
+            for (Cell *cell : net->cells)
             {
                 if (!cell->lock && cell->groupIdx == to)
                 {
@@ -96,7 +96,7 @@ void Partitioner::updateGain(Cell *baseCell)
         ++net->numCellInGroup[to];
         if (net->numCellInGroup[from] == 0)
         {
-            for (auto cell : net->cells)
+            for (Cell *cell : net->cells)
             {
                 if (!cell->lock)
                 {
@@ -107,7 +107,7 @@ void Partitioner::updateGain(Cell *baseCell)
         }
         else if (net->numCellInGroup[from] == 1)
         {
-            for (auto cell : net->cells)
+            for (Cell *cell : net->cells)
             {
                 if (!cell->lock && cell->groupIdx == from)
                 {
@@ -132,7 +132,7 @@ int Partitioner::fmProcess()
         {
             while (groups[0].numCellInBucketList > 0)
             {
-                auto baseCell = groups[0].getBaseCell();
+                Cell *baseCell = groups[0].getBaseCell();
                 if (std::abs(groups[0].size - groups[1].size - 2 * baseCell->size) >= input->maxDiffSize)
                     break;
 
@@ -150,7 +150,7 @@ int Partitioner::fmProcess()
         {
             while (groups[1].numCellInBucketList > 0)
             {
-                auto baseCell = groups[1].getBaseCell();
+                Cell *baseCell = groups[1].getBaseCell();
                 if (std::abs(groups[1].size - groups[0].size - 2 * baseCell->size) >= input->maxDiffSize)
                     break;
 
@@ -168,7 +168,7 @@ int Partitioner::fmProcess()
 
     for (int i = cellStack.size() - 1; i >= bestStep; --i)
     {
-        auto cell = cellStack[i];
+        Cell *cell = cellStack[i];
         groups[cell->groupIdx].size -= cell->size;
         cell->groupIdx = !cell->groupIdx;
         groups[cell->groupIdx].size += cell->size;
@@ -179,13 +179,13 @@ int Partitioner::fmProcess()
 Partitioner::Partitioner(Input *input) : input(input), groups(2)
 {
     int pMax = 0;
-    for (const auto &cell : input->cells)
+    for (const Cell::ptr &cell : input->cells)
         if (pMax < static_cast<int>(cell->nets.size()))
             pMax = cell->nets.size();
     groups[0].pMax = groups[1].pMax = pMax;
 
     generateInitialPartition();
-    auto cutSize = getCutSize();
+    int cutSize = getCutSize();
     std::cout << "----- DESIGN INFORMATION -----\n"
               << "#cell:            " << input->cells.size() << "\n"
               << "#net:             " << input->nets.size() << "\n"
@@ -198,7 +198,7 @@ ResultWriter::ptr Partitioner::solve()
     int pass = 0, cutSize = 0;
     while (true)
     {
-        auto maxPartialSum = fmProcess();
+        int maxPartialSum = fmProcess();
         std::cout << "----- PASS " << ++pass << " -----\n"
                   << "Max partial sum: " << maxPartialSum << "\n"
                   << "\n";
@@ -212,9 +212,9 @@ ResultWriter::ptr Partitioner::solve()
         }
     }
 
-    auto result = new ResultWriter();
+    ResultWriter *result = new ResultWriter();
     result->setCutsize(cutSize);
-    for (const auto &cell : input->cells)
+    for (const Cell::ptr &cell : input->cells)
         result->addCell(cell.get());
     return std::unique_ptr<ResultWriter>(result);
 }
