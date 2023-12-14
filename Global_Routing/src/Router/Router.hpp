@@ -15,22 +15,13 @@ class Router
     std::vector<std::vector<Edge>> hEdges, vEdges;
     std::vector<std::vector<GridNode>> routingGrid;
 
-    enum Direction
-    {
-        STOP = -1,
-        LEFT,
-        RIGHT,
-        UP,
-        DOWN
-    };
-
-    Edge *getEdge(int x, int y, int direction);
+    Edge *getEdge(int x, int y, Direction direction);
     double calCost(const Edge *edge) const;
     int getTotalOverflow() const;
     int getWirelength() const;
 
-    RoutingNode propagate(const RoutingNode &current, const RoutingNode &target, int direction);
-    void wavePropagate(const RoutingNode &source, RoutingNode &target, const std::vector<int> directions);
+    RoutingNode propagate(const RoutingNode &current, const RoutingNode &target, Direction direction);
+    void wavePropagate(const RoutingNode &source, RoutingNode &target, const std::vector<Direction> directions);
     void traceBack(Net *net);
     void monotonicRouting(Net *net);
 

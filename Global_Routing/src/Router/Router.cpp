@@ -5,7 +5,7 @@
 #include <iostream>
 #include <random>
 
-Edge *Router::getEdge(int x, int y, int direction)
+Edge *Router::getEdge(int x, int y, Direction direction)
 {
     if (direction == Direction::LEFT)
         return &hEdges[y][x - 1];
@@ -48,7 +48,7 @@ int Router::getWirelength() const
 }
 
 RoutingNode outOfBoundary(-1, -1, -1);
-RoutingNode Router::propagate(const RoutingNode &current, const RoutingNode &target, int direction)
+RoutingNode Router::propagate(const RoutingNode &current, const RoutingNode &target, Direction direction)
 {
     RoutingNode next = current;
     if (direction == Direction::LEFT)
@@ -91,7 +91,7 @@ RoutingNode Router::propagate(const RoutingNode &current, const RoutingNode &tar
     return next;
 }
 
-void Router::wavePropagate(const RoutingNode &source, RoutingNode &target, const std::vector<int> directions)
+void Router::wavePropagate(const RoutingNode &source, RoutingNode &target, const std::vector<Direction> directions)
 {
     for (std::vector<GridNode> &row : routingGrid)
         for (GridNode &gridNode : row)
@@ -114,7 +114,7 @@ void Router::wavePropagate(const RoutingNode &source, RoutingNode &target, const
         if (target.cost != -1 && current.cost >= target.cost)
             continue;
 
-        for (int direction : directions)
+        for (Direction direction : directions)
         {
             const RoutingNode &next = propagate(current, target, direction);
             if (next.cost == -1)
@@ -138,7 +138,7 @@ void Router::traceBack(Net *net)
     while (routingGrid[y][x].prevDirection != Direction::STOP)
     {
         net->routingPath.emplace_back(x, y);
-        int prevDirection = routingGrid[y][x].prevDirection;
+        Direction prevDirection = routingGrid[y][x].prevDirection;
         if (prevDirection == Direction::LEFT)
         {
             getEdge(x, y, Direction::RIGHT)->passNets.emplace(net);
@@ -166,7 +166,7 @@ void Router::traceBack(Net *net)
 void Router::monotonicRouting(Net *net)
 {
     RoutingNode source(net->x1, net->y1, 0), target(net->x2, net->y2, -1);
-    std::vector<int> directions(2, Direction::STOP);
+    std::vector<Direction> directions(2, Direction::STOP);
     if (source.x > target.x)
         directions[0] = Direction::LEFT;
     else if (source.x < target.x)
@@ -210,7 +210,7 @@ std::priority_queue<Edge *, std::vector<Edge *>, Edge> Router::getRipupQueue()
 void Router::mazeRouting(Net *net)
 {
     RoutingNode source(net->x1, net->y1, 0), target(net->x2, net->y2, -1);
-    std::vector<int> directions = {Direction::LEFT, Direction::RIGHT, Direction::UP, Direction::DOWN};
+    std::vector<Direction> directions{Direction::LEFT, Direction::RIGHT, Direction::UP, Direction::DOWN};
     wavePropagate(source, target, directions);
     traceBack(net);
 }
@@ -225,7 +225,7 @@ void Router::ripupReroute(std::unordered_set<Net *> passNets)
         {
             const Point &point1 = net->routingPath[i - 1];
             const Point &point2 = net->routingPath[i];
-            int direction = Direction::STOP;
+            Direction direction = Direction::STOP;
             if (point1.x > point2.x)
                 direction = Direction::LEFT;
             else if (point1.x < point2.x)

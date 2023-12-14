@@ -52,9 +52,18 @@ struct Edge
     int overflow() const;
 };
 
+enum struct Direction : int
+{
+    STOP = -1,
+    LEFT,
+    RIGHT,
+    UP,
+    DOWN
+};
+
 struct GridNode
 {
-    int prevDirection;
+    Direction prevDirection;
     double cost;
 
     GridNode();

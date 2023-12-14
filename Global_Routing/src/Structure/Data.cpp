@@ -47,11 +47,12 @@ int Edge::overflow() const
     return std::max(demand() - capacity, 0);
 }
 
-GridNode::GridNode() : prevDirection(-1), cost(-1) {}
+GridNode::GridNode() : prevDirection(Direction::STOP), cost(-1) {}
 
 void GridNode::reset()
 {
-    prevDirection = cost = -1;
+    prevDirection = Direction::STOP;
+    cost = -1;
 }
 
 RoutingNode::RoutingNode() : x(0), y(0) {}
