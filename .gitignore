@@ -6,3 +6,5 @@
 
 # Visual Studio Code Setting
 .vscode/
+
+*.png
