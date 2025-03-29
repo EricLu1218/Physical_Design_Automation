@@ -11,7 +11,7 @@ struct Pin
     int x, y;
 
     Pin();
-    Pin(const std::string &name, int x, int y);
+    Pin(const std::string &name_, int x_, int y_);
 };
 
 struct Hardblock
@@ -26,7 +26,9 @@ struct Hardblock
     Pin::ptr pin;
 
     Hardblock();
-    Hardblock(const std::string &name, int width, int height);
+    Hardblock(const std::string &name_, int width_, int height_);
+    int currWidth() const;
+    int currHeight() const;
     void update(int width_, int height_, int x_, int const y_);
 };
 
@@ -61,7 +63,7 @@ struct Node
         int width, height, leftChoice, rightChoice;
 
         Record();
-        Record(int width, int height, int leftChoice, int rightChoice);
+        Record(int width_, int height_, int leftChoice_, int rightChoice_);
     };
 
     enum Type
@@ -77,6 +79,6 @@ struct Node
     std::vector<Record> records;
 
     Node();
-    Node(int type, Hardblock *hardblock = nullptr);
+    Node(int type_, Hardblock *hardblock_ = nullptr);
     void updateRecord();
 };

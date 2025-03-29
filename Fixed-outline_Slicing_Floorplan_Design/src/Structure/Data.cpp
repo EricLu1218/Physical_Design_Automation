@@ -4,19 +4,29 @@
 
 Pin::Pin() : x(0), y(0) {}
 
-Pin::Pin(const std::string &name, int x, int y) : name(name), x(x), y(y) {}
+Pin::Pin(const std::string &name_, int x_, int y_) : name(name_), x(x_), y(y_) {}
 
 Hardblock::Hardblock()
     : width(0), height(0), x(0), y(0), isRotated(false), pin(new Pin(name, x, y)) {}
 
-Hardblock::Hardblock(const std::string &name, int width, int height)
-    : name(name), width(width), height(height), x(0), y(0), isRotated(false), pin(new Pin(name, x, y)) {}
+Hardblock::Hardblock(const std::string &name_, int width_, int height_)
+    : name(name_), width(width_), height(height_), x(0), y(0), isRotated(false), pin(new Pin(name, x, y)) {}
+
+int Hardblock::currWidth() const
+{
+    return (isRotated) ? height : width;
+}
+
+int Hardblock::currHeight() const
+{
+    return (isRotated) ? width : height;
+}
 
 void Hardblock::update(int width_, int height_, int x_, int y_)
 {
     x = x_;
     y = y_;
-    isRotated = !(width == width_ || height == height_);
+    isRotated = (width != width_);
     pin->x = x_ + width_ / 2;
     pin->y = y_ + height_ / 2;
 }
@@ -45,17 +55,25 @@ Input::Input() : deadspaceRatio(0) {}
 
 Node::Record::Record() : width(0), height(0), leftChoice(0), rightChoice(0) {}
 
-Node::Record::Record(int width, int height, int leftChoice, int rightChoice)
-    : width(width), height(height), leftChoice(leftChoice), rightChoice(rightChoice) {}
+Node::Record::Record(int width_, int height_, int leftChoice_ = 0, int rightChoice_ = 0)
+    : width(width_), height(height_), leftChoice(leftChoice_), rightChoice(rightChoice_) {}
 
 Node::Node() : type(HARDBLOCK), hardblock(nullptr), lchild(nullptr), rchild(nullptr) {}
 
-Node::Node(int type, Hardblock *hardblock) : type(type), hardblock(hardblock), lchild(nullptr), rchild(nullptr)
+Node::Node(int type_, Hardblock *hardblock_) : type(type_), hardblock(hardblock_), lchild(nullptr), rchild(nullptr)
 {
     if (hardblock)
     {
-        records.emplace_back(hardblock->width, hardblock->height, 0, 0);
-        records.emplace_back(hardblock->height, hardblock->width, 1, 1);
+        if (hardblock->width <= hardblock->height)
+        {
+            records.emplace_back(hardblock->width, hardblock->height);
+            records.emplace_back(hardblock->height, hardblock->width);
+        }
+        else
+        {
+            records.emplace_back(hardblock->height, hardblock->width);
+            records.emplace_back(hardblock->width, hardblock->height);
+        }
     }
 }
 
@@ -66,12 +84,12 @@ void Node::updateRecord()
     {
         auto cmp = [](const Record &a, const Record &b) -> bool
         {
-            return a.width <= b.width;
+            return a.width < b.width;
         };
         std::sort(lchild->records.begin(), lchild->records.end(), cmp);
         std::sort(rchild->records.begin(), rchild->records.end(), cmp);
 
-        int l = lchild->records.size() - 1, r = rchild->records.size() - 1;
+        int l = int(lchild->records.size()) - 1, r = int(rchild->records.size()) - 1;
         while (l >= 0 && r >= 0)
         {
             const Node::Record &left = lchild->records[l];
@@ -87,7 +105,7 @@ void Node::updateRecord()
     {
         auto cmp = [](const Record &a, const Record &b) -> bool
         {
-            return a.height >= b.height;
+            return a.height > b.height;
         };
         std::sort(lchild->records.begin(), lchild->records.end(), cmp);
         std::sort(rchild->records.begin(), rchild->records.end(), cmp);

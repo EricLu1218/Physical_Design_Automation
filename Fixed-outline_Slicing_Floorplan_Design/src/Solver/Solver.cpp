@@ -1,36 +1,50 @@
 #include "Solver.hpp"
+#include <algorithm>
 #include <cmath>
 #include <cstdlib>
 #include <iostream>
 #include <stack>
+#include <limits>
 
 std::vector<int> Solver::getInitialExpression() const
 {
-    std::vector<int> expression;
-    int rowWidth = 0, hCnt = 0, vCnt = 0;
+    for (Hardblock::ptr &hardblock : input->hardblocks)
+    {
+        if (hardblock->width < hardblock->height)
+            hardblock->update(hardblock->height, hardblock->width, 0, 0);
+    }
+    std::sort(input->hardblocks.begin(), input->hardblocks.end(), [](const Hardblock::ptr &lhs, const Hardblock::ptr &rhs) -> bool
+              { return lhs->currWidth() > rhs->currWidth(); });
+    // do not change the order of hardblocks in input->hardblocks after sorting
+    // because the order of hardblocks in input->hardblocks is used to build the expression
+
+    std::vector<std::vector<int>> grid;
+    grid.emplace_back();
+    int rowWidth = 0;
     for (size_t i = 0; i < input->hardblocks.size(); ++i)
     {
+        if (rowWidth > outline)
+        {
+            grid.emplace_back();
+            rowWidth = 0;
+        }
+        grid.back().emplace_back(i);
         rowWidth += input->hardblocks[i]->width;
-        if (rowWidth >= outline)
-        {
-            rowWidth = input->hardblocks[i]->width;
-            vCnt = 0;
-            if (++hCnt == 2)
-            {
-                expression.emplace_back(Node::HORIZONTAL_CUT);
-                hCnt = 1;
-            }
-        }
-
-        expression.emplace_back(i);
-        if (++vCnt == 2)
-        {
-            expression.emplace_back(Node::VERTICAL_CUT);
-            vCnt = 1;
-        }
     }
-    if (++hCnt == 2)
-        expression.emplace_back(Node::HORIZONTAL_CUT);
+
+    std::vector<int> expression;
+    expression.reserve(input->hardblocks.size() * 2 - 1);
+    for (size_t r = 0; r < grid.size(); ++r)
+    {
+        for (size_t c = 0; c < grid[r].size(); ++c)
+        {
+            expression.emplace_back(grid[r][c]);
+            if (c >= 1)
+                expression.emplace_back(Node::VERTICAL_CUT);
+        }
+        if (r >= 1)
+            expression.emplace_back(Node::HORIZONTAL_CUT);
+    }
     return expression;
 }
 
@@ -167,7 +181,7 @@ void Solver::setPosition(Node *node, size_t choice, int x, int y)
     }
 }
 
-int Solver::getCost(const std::vector<int> &expression, bool withWirelength)
+std::pair<bool, int> Solver::getCost(const std::vector<int> &expression, bool withWirelength)
 {
     Node *root = buildSlicingTree(expression);
     int minAreaCost = std::numeric_limits<int>::max();
@@ -197,7 +211,7 @@ int Solver::getCost(const std::vector<int> &expression, bool withWirelength)
         for (const Net::ptr &net : input->nets)
             wirelength += net->wirelength();
     }
-    return minAreaCost * 10 + wirelength;
+    return {minAreaCost == 0, minAreaCost * 10 + wirelength};
 }
 
 int Solver::getWirelength(const std::vector<int> &expression)
@@ -227,7 +241,7 @@ std::pair<std::vector<int>, int> Solver::simulatedAnnealing(std::vector<int> exp
                                                             double coolingCoefficient, int tryingTimes,
                                                             double maxRejectRatio)
 {
-    int cost = getCost(expression, withWirelength);
+    int cost = getCost(expression, withWirelength).second;
     std::vector<int> bestExpression = expression;
     int bestCost = cost;
     if (bestCost == 0)
@@ -248,7 +262,13 @@ std::pair<std::vector<int>, int> Solver::simulatedAnnealing(std::vector<int> exp
             std::vector<int> newExpression = perturb(expression, type);
 
             ++tryingCnt;
-            int newCost = getCost(newExpression, withWirelength);
+            auto [inOutline, newCost] = getCost(newExpression, withWirelength);
+            if (withWirelength && !inOutline)
+            {
+                ++rejectCnt;
+                continue;
+            }
+
             int deltaCost = newCost - cost;
             if (deltaCost < 0 || static_cast<double>(rand()) / RAND_MAX < exp(-deltaCost / temperature))
             {
@@ -288,12 +308,12 @@ Solver::Solver(Input *input, Timer &timer) : input(input), timer(timer)
         cutNodes.emplace_back(new Node(Node::HORIZONTAL_CUT));
 
     outline = sqrt(totalArea * (1 + input->deadspaceRatio));
-    std::cout << "----- DESIGN INFORMATION -----\n"
-              << "#hardblock:              " << input->hardblocks.size() << "\n"
-              << "#fixed-pin:              " << input->fixedPins.size() << "\n"
-              << "#net:                    " << input->nets.size() << "\n"
-              << "Deadspace ratio:         " << input->deadspaceRatio << "\n"
-              << "Floorplan width(height): " << outline << "\n"
+    std::cout << "------ DESIGN INFORMATION -------\n"
+              << "#hardblock:               " << input->hardblocks.size() << "\n"
+              << "#fixed-pin:               " << input->fixedPins.size() << "\n"
+              << "#net:                     " << input->nets.size() << "\n"
+              << "Deadspace ratio:          " << input->deadspaceRatio << "\n"
+              << "Floorplan width(height):  " << outline << "\n"
               << "\n";
 }
 
@@ -304,25 +324,38 @@ ResultWriter::ptr Solver::solve()
     srand(seed);
 
     std::vector<int> expression = getInitialExpression();
-    int cost = getCost(expression, false);
-    std::cout << "-------- SA FOR AREA --------\n";
-    while (cost != 0)
+    int cost = getCost(expression, false).second;
+    std::cout << "---------- SA FOR AREA ----------\n";
+    int iter = 0;
+    while (cost != 0 && !timer.overTime())
+    {
         std::tie(expression, cost) = simulatedAnnealing(expression, false, 1000, 0.1, 0.9, 10, 1);
-    int wirelength = getWirelength(expression);
-    std::cout << "A feasible solution is found!\n"
-              << "Wirelength: " << wirelength << "\n"
-              << "\n";
+        printf("Iteration %2d - area cost: %d\n", ++iter, cost);
+    }
 
-    std::cout << "----- SA FOR WIRELENGTH -----\n";
-    std::tie(expression, cost) = simulatedAnnealing(expression, true, 1000, 1, 0.95, 5, 1);
-    wirelength = getWirelength(expression);
-    std::cout << "A minimum wirelength solution is found!\n"
-              << "Wirelength: " << wirelength << "\n"
-              << "\n";
+    if (cost != 0)
+    {
+        std::cout << "No feasible solution is found!\n";
+        return nullptr;
+    }
+    else
+    {
+        int wirelength = getWirelength(expression);
+        std::cout << "A feasible solution is found!\n"
+                  << "Wirelength: " << wirelength << "\n"
+                  << "\n";
 
-    ResultWriter *result = new ResultWriter();
-    result->assignWirelength(wirelength);
-    for (const Hardblock::ptr &hardblock : input->hardblocks)
-        result->addHardblock(hardblock.get());
-    return std::unique_ptr<ResultWriter>(result);
+        std::cout << "------- SA FOR WIRELENGTH -------\n";
+        std::tie(expression, cost) = simulatedAnnealing(expression, true, 1000, 1, 0.95, 5, 1);
+        wirelength = getWirelength(expression);
+        std::cout << "A minimum wirelength solution is found!\n"
+                  << "Wirelength: " << wirelength << "\n"
+                  << "\n";
+
+        ResultWriter *result = new ResultWriter();
+        result->assignWirelength(wirelength);
+        for (const Hardblock::ptr &hardblock : input->hardblocks)
+            result->addHardblock(hardblock.get());
+        return std::unique_ptr<ResultWriter>(result);
+    }
 }
