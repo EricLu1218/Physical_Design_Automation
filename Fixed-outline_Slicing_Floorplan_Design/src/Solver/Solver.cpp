@@ -29,7 +29,7 @@ std::vector<int> Solver::getInitialExpression() const
             rowWidth = 0;
         }
         grid.back().emplace_back(i);
-        rowWidth += input->hardblocks[i]->width;
+        rowWidth += input->hardblocks[i]->currWidth();
     }
 
     std::vector<int> expression;
