@@ -30,8 +30,14 @@ void SubRow::updateMinMax(int minX_, int maxX_)
     freeWidth = maxX_ - minX_;
 }
 
-Row::Row() : y(0), height(0), siteWidth(0) {}
+Row::Row() : x(0), y(0), height(0), siteWidth(0) {}
 
-Row::Row(int y, int height, int siteWidth) : y(y), height(height), siteWidth(siteWidth) {}
+Row::Row(int x, int y, int height, int siteWidth) : x(x), y(y), height(height), siteWidth(siteWidth) {}
+
+int Row::getSiteX(double nonalignX, double (*func)(double)) const
+{
+    double shiftX = nonalignX - x;
+    return x + func(shiftX / siteWidth) * siteWidth;
+}
 
 Input::Input() {}

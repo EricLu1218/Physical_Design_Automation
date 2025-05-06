@@ -3,6 +3,7 @@
 #include <string>
 #include <unordered_map>
 #include <vector>
+#include <cmath>
 
 struct Cell
 {
@@ -52,11 +53,12 @@ struct Row
 {
     using ptr = std::unique_ptr<Row>;
 
-    int y, height, siteWidth;
+    int x, y, height, siteWidth;
     std::vector<SubRow::ptr> subRows;
 
     Row();
-    Row(int y, int height, int siteWidth);
+    Row(int x, int y, int height, int siteWidth);
+    int getSiteX(double nonalignX, double (*func)(double) = std::round) const;
 };
 
 struct Input

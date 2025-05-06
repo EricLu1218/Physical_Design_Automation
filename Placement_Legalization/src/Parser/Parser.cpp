@@ -185,7 +185,7 @@ void Parser::readScl(Input *input, const std::string &filepath)
             }
             else if (identifier == "End")
             {
-                Row *row = new Row(y, height, siteWidth);
+                Row *row = new Row(x, y, height, siteWidth);
                 row->subRows.emplace_back(new SubRow(x, x + siteWidth * siteNum));
                 input->rows.emplace_back(row);
                 break;
