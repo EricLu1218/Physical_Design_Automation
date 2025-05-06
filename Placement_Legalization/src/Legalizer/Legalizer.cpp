@@ -360,10 +360,10 @@ ResultWriter::ptr Legalizer::solve()
     abacusProcess();
     determinePosition();
     auto [totalDisplacement, maxDisplacement] = getTotalAndMaxDisplacement();
-    std::cout << "------- ABACUS RESULT --------\n"
-              << "Total displacement:          " << totalDisplacement << "\n"
-              << "Max displacement:            " << maxDisplacement << "\n"
-              << "\n";
+    std::cout << "------- ABACUS RESULT --------\n";
+    printf("Total displacement:          %.2lf\n", totalDisplacement);
+    printf("Max displacement:            %.2lf\n", maxDisplacement);
+    std::cout << "\n";
 
     ResultWriter *result = new ResultWriter();
     for (const Cell::ptr &cell : input->cells)
