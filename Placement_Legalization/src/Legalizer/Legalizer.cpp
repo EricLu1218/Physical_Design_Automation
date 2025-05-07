@@ -346,7 +346,7 @@ void Legalizer::determinePosition()
 Legalizer::Legalizer(Input *input)
     : input(input), maxDisplacementConstraint(input->maxDisplacementInSite * input->rows[0]->siteWidth)
 {
-    std::cout << "----- DESIGN INFORMATION -----\n"
+    std::cout << "---------- DESIGN INFORMATION ----------\n"
               << "#row:                        " << input->rows.size() << "\n"
               << "#cell:                       " << input->cells.size() << "\n"
               << "#blockage:                   " << input->blockages.size() << "\n"
@@ -360,7 +360,7 @@ ResultWriter::ptr Legalizer::solve()
     abacusProcess();
     determinePosition();
     auto [totalDisplacement, maxDisplacement] = getTotalAndMaxDisplacement();
-    std::cout << "------- ABACUS RESULT --------\n";
+    std::cout << "------------ ABACUS RESULT -------------\n";
     printf("Total displacement:          %.2lf\n", totalDisplacement);
     printf("Max displacement:            %.2lf\n", maxDisplacement);
     std::cout << "\n";
