@@ -1,5 +1,5 @@
 # Physical Design Automation
-These are "2019 NTHU CS613500 VLSI Physical Design Automation" course projects.
+These are "NTHU CS6135 VLSI Physical Design Automation" course projects.
 
 <h3>⭐⭐⭐ IF THIS REPO HELPS YOU, PLEASE GIVE ME A STAR! ⭐⭐⭐</h3>
 
