@@ -1,4 +1,4 @@
-# Physical Design Automation
+# VLSI Physical Design Automation
 These are "NTHU CS6135 VLSI Physical Design Automation" course projects.
 
 <h3>⭐⭐⭐ IF THIS REPO HELPS YOU, PLEASE GIVE ME A STAR! ⭐⭐⭐</h3>
